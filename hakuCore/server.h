@@ -1,4 +1,5 @@
 #ifndef SERVER_H
+#define SERVER_H
 
 #include <uv.h>
 
@@ -11,6 +12,6 @@ typedef struct {
 } write_buf_t;
 
 int new_server(void);
-int set_server_data(const char* addr, int port);
+int set_server_data(const char* addr, int port, int backlog);
 
 #endif
