@@ -7,7 +7,7 @@
 
 size_t writeToString (char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-	SRespData *data = (SRespData*)userdata;
+	resp_data *data = (resp_data*)userdata;
 	size_t allocSize = (nmemb + data->length + 5) * size;
 	size_t i;
 
@@ -25,7 +25,7 @@ size_t writeToString (char *ptr, size_t size, size_t nmemb, void *userdata)
 	return size * nmemb;
 }
 
-CURLcode getData (SRespData *respData, const char *url, int num, ...)
+CURLcode getData (resp_data *respData, const char *url, int num, ...)
 {
 	int length, i, j;
 	char *urlParms, *parms;

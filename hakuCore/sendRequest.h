@@ -11,11 +11,11 @@
 
 #define MAX_PARMS_SIZE 2048
 
-typedef struct SResponceData {
+typedef struct {
 	size_t length;
 	char *data;
-} SRespData;
+} resp_data;
 
-CURLcode getData (SRespData *respData, const char *url, int num, ...);
+CURLcode getData (resp_data *respData, const char *url, int num, ...);
 
 #endif
