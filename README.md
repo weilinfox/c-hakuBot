@@ -25,7 +25,7 @@ typedef struct {
 CURLcode getData (resp_data *respData, const char *url, int num, ...);
 ```
 
-## hakuMain.h
+### hakuMain.h
 
 ```c
 typedef struct {
@@ -47,7 +47,7 @@ typedef struct {
 int new_thread(const char *httpMsg);
 ```
 
-## server.h
+### server.h
 
 ```c
 /*start a new http server return uv_run result*/
@@ -56,7 +56,7 @@ int new_server(void);
 int set_server_data(const char* addr, int port, int backlog);
 ```
 
-## json.h
+### json.h
 
 ```c
 enum jsonDataType = {TYPE_INIT64, TYPE_STRING};
@@ -67,7 +67,7 @@ enum jsonDataType = {TYPE_INIT64, TYPE_STRING};
 int getJsonValue (const char *jsonData, void **resultPointer, int dataType, const char *memberName);
 ```
 
-## errorMsg.h
+### errorMsg.h
 Set error flags
 
 ## reference
