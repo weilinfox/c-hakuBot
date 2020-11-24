@@ -1,10 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include "errorMsg.h"
 #include <uv.h>
-
-#define SERVER_ALREADY_STARTED -1
-#define SERVER_DATA_ERROR -2
 
 typedef struct {
 	uv_write_t wbuf;

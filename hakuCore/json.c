@@ -12,42 +12,62 @@ void getTextCb (JsonObject *obj, const gchar *key, JsonNode *node, gpointer user
 	}
 }
 
-int getJsonValue(const char *data, char **result, const char *member)
+int getJsonValue(const char *data, void **result, int type, const char *member)
 {
-	if (*result != NULL) return RESULT_NONEMPTY_ERROR;
+	if (*result != NULL) return POINTER_NONEMPTY_ERROR;
 	JsonParser *jsonParser = json_parser_new();
 	GError *error = NULL;
 	json_parser_load_from_data(jsonParser, data, strlen(data), &error);
 
 	if (error) {
-		*result = (char*)malloc(sizeof(char)*MAX_ERROR_MSG_LEN);
-		snprintf(*result, MAX_ERROR_MSG_LEN-2, "Json parse Error: %s", error->message);
-		g_error_free(error);
-		g_object_unref(jsonParser);
-		return JSON_PARSE_ERROR;
+		printf("Json parse error.\n");
+		if (type == TYPE_STRING) {
+			*result = malloc(sizeof(char)*MAX_ERROR_MSG_LEN);
+			snprintf((char*)*result, MAX_ERROR_MSG_LEN-2, "Json parse Error: %s", error->message);
+			g_error_free(error);
+			g_object_unref(jsonParser);
+			return JSON_PARSE_ERROR;
+		} else if (type == TYPE_INT64) {
+			*result = malloc(sizeof(gint64));
+			**(gint64**)result = error->code;
+			return JSON_PARSE_ERROR;
+		} else {
+			return MULTIPLE_ERRORS;
+		}
 	}
+	printf("Json parse finished\n");
 
-	char *text = NULL;
-	JsonNode *jsonRoot = json_parser_get_root(jsonParser);
-	JsonObject *rootObject = json_node_get_object(jsonRoot);
-	//printf("Has this member? %d\n", json_object_has_member(rootObject, "text"));
+	/*search and get data*/
+	JsonNode *rootNode = json_parser_get_root(jsonParser);
+	JsonObject *rootObject = json_node_get_object(rootNode);
 	if (json_object_has_member(rootObject, member)) {
-		//JsonObject *memberObject = json_object_get_object_member(rootObject, "text");
-		//printf("member object get pointer: %p\n", memberObject);
+		printf("Json parse: find member\n");
+		JsonNode *thisNode = json_object_get_member(rootObject, member);
+		GType thisType = json_node_get_value_type(thisNode);
 		//json_object_foreach_member(memberObject, getTextCb, text);
-		//getTextCb();
-		//GList *valueList = json_object_get_values(rootObject);
-		//printf("Length of valueList: %d\n", g_list_length(valueList));
-		text = (char*)json_object_get_string_member(rootObject, member);
-		//printf("text pointer is: %p\ndata is: %s\n", text, text);
-		//text = (char*)g_list_nth_data(valueList, 0);
-		*result = (char*)malloc(sizeof(char)*(strlen(text)+2));
-		//printf("result pointer is: %p\n", *result);
-		strcpy(*result, text);
-		//printf("length is: %ld\n", strlen(*result));
-		//printf("data is: %s\n", *result);
+		if (type == TYPE_STRING && g_type_is_a(thisType, G_TYPE_STRING)) {
+			char *text = NULL;
+			text = (char*)json_node_get_string(thisNode);
+			*result = malloc(sizeof(char)*(strlen(text)+2));
+			strcpy((char*)*result, text);
+		} else if (type == TYPE_INT64 && g_type_is_a(thisType, G_TYPE_INT64)) {
+			*result = malloc(sizeof(gint64));
+			**(gint64**)result = json_node_get_int(thisNode);
+		} else {
+			return MULTIPLE_ERRORS;
+		}
 	} else {
 		g_object_unref(jsonParser);
+		printf("Json parse: no such member\n");
+		if (type == TYPE_STRING) {
+			*result = malloc(sizeof(char)*16);
+			strcpy((char*)*result, "No such member.");
+		} else if (type == TYPE_INT64) {
+			*result = malloc(sizeof(int64_t));
+			**(gint64**)result = NO_SUCH_MEMBER_ERROR;
+		} else {
+			return MULTIPLE_ERRORS;
+		}
 		return NO_SUCH_MEMBER_ERROR;
 	}
 

@@ -1,4 +1,4 @@
-#include "sendRequest.h"
+#include "request.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +34,7 @@ CURLcode getData (resp_data *respData, const char *url, int num, ...)
 	CURLcode res = UNKOWN_ERROR;
 
 	if (num & 0x01) return SET_PARMS_ERROR;
-	if (respData->length || respData->data) return BUFFER_ERROR;
+	if (respData->length || respData->data) return CURL_BUFFER_ERROR;
 	
 	urlParms = (char*)malloc(sizeof(int) * (MAX_PARMS_SIZE + 5));
 	length = 0;

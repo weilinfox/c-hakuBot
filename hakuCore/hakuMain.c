@@ -117,19 +117,21 @@ int new_thread (const char* msg)
 		}
 	}
 
-	printf("Parse result here:\n");
-	printf("Method: %s\nPath: %s\nProtocol: %s\n", httpData.httpMethod, httpData.httpPath, httpData.httpProtocol);
+	fprintf(stdout, "\n\nParse result START:\n");
+	fprintf(stdout, "Method: %s\nPath: %s\nProtocol: %s\n", httpData.httpMethod, httpData.httpPath, httpData.httpProtocol);
 	for (i = 0; i < httpData.headerNum; i++) {
-		printf("%s: %s\n", httpData.httpHeader[i], httpData.httpHeaderData[i]);
+		fprintf(stdout, "%s: %s\n", httpData.httpHeader[i], httpData.httpHeaderData[i]);
 	}
 	if (httpData.httpData == NULL) {
-		printf("No data: %ld\n", httpData.dataLen);
+		fprintf(stdout, "No data: %ld\n", httpData.dataLen);
 	} else {
-		printf("Get data: %ld\n", httpData.dataLen);
-		printf("%s\n", httpData.httpData);
+		fprintf(stdout, "Get data: %ld\n", httpData.dataLen);
+		fprintf(stdout, "%s\n", httpData.httpData);
 	}
+	fprintf(stdout, "Parse result END.\n\n");
 
 
+	/*Quit command*/
 	if (!strcmp(httpData.httpPath, "/QUIT")) {
 		for (i = 0; i < httpData.headerNum; i++) {
 			free(httpData.httpHeader[i]);
@@ -138,6 +140,6 @@ int new_thread (const char* msg)
 		free(httpData.httpData);
 		return QUIT_FLAG;
 	} else {
-		return 0;
+		return NO_ERROR;
 	}
 }

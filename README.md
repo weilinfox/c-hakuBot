@@ -5,7 +5,7 @@ A new version of hakuBot writen by C.
 + libcurl
 + libuv
 + libhttp-parser
-+ libjson-glib: req libgio
++ libjson-glib
 
 
 ## API
@@ -59,9 +59,22 @@ int set_server_data(const char* addr, int port, int backlog);
 ## json.h
 
 ```c
-int getJsonValue (const char *jsonData, char **resultText, const char *memberName);
+enum jsonDataType = {TYPE_INIT64, TYPE_STRING};
 ```
+
+
+```c
+int getJsonValue (const char *jsonData, void **resultPointer, int dataType, const char *memberName);
+```
+
+## errorMsg.h
+Set error flags
 
 ## reference
 
 [glib-compiling](https://developer.gnome.org/glib/stable/glib-compiling.html)
+[Json object](https://developer.gnome.org/json-glib/stable/json-glib-JSON-Object.html)
+[Json node](https://developer.gnome.org/json-glib/stable/json-glib-JSON-Node.html)
+[Type information](https://developer.gnome.org/gobject/stable/gobject-Type-Information.html)
+[Error Reporting](https://developer.gnome.org/glib/stable/glib-Error-Reporting.html)
+

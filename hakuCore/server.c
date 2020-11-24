@@ -29,7 +29,7 @@ void new_buffer(uv_handle_t* handle, size_t size, uv_buf_t* buf)
 void on_write(uv_write_t *req, int status)
 {
 	if (status) {
-		fprintf(stdout, "Write Error %s\n", uv_strerror(status));
+		fprintf(stderr, "Write Error %s\n", uv_strerror(status));
 	}
 	free(req);
 }
@@ -39,38 +39,38 @@ void on_reply(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
 	if (nread > 0) {
 		write_buf_t *replyBuf = (write_buf_t*)malloc(sizeof(write_buf_t));
 		replyBuf->buf = uv_buf_init(httpReply, strlen(httpReply));
-		//printf("Connection got message: \n%s\n", buf->base);
+
 		int res = uv_write((uv_write_t*)replyBuf, client, &replyBuf->buf, 1, on_write);
 		if (res) {
-			printf("Connection write Error with code: %d\n", res);
+			fprintf(stderr, "Connection write Error with code: %d\n", res);
 		}
-		printf("Call new_thread here\n");
+		fprintf(stdout, "Call new_thread here\n");
 		res = new_thread(buf->base);
 		if (res) {
 			if (res == QUIT_FLAG) {
-				printf("Quit server now.\n");
+				fprintf(stdout, "Quit server now.\n");
 				uv_stop(loop);
 			} else {
-				printf("Quit new_thread with an Error code: %d\n", res);
+				fprintf(stderr, "Quit new_thread with an Error code: %d\n", res);
 			}
 		}
 		return;
 	} else if (nread < 0) {
 		if (nread != UV_EOF) {
-			fprintf(stdout, "Read Error: %s\n", uv_err_name(nread));
+			fprintf(stderr, "Read Error: %s\n", uv_err_name(nread));
 		} else {
 			fprintf(stdout, "Read End Nomally.\n");
 		}
 		uv_close((uv_handle_t*)client, on_close);
 	}
-	printf("Free buf->base here\n");
+	fprintf(stdout, "Free buf->base here\n");
 	free(buf->base);
 }
 
 void on_new_connection(uv_stream_t *server, int status)
 {
 	if (status < 0) {
-		printf("Error in listen callback with status: %d\n", status);
+		fprintf(stderr, "Error in listen callback with status: %d\n", status);
 		return ;
 	}
  
@@ -79,15 +79,16 @@ void on_new_connection(uv_stream_t *server, int status)
 
 	if (uv_accept(server, (uv_stream_t*)client) == 0) {
 		int res = uv_read_start((uv_stream_t*)client, new_buffer, on_reply);
-		printf("Connection accepted with a read code: %d\n", res);
+		fprintf(stdout, "Connection accepted with a read code: %d\n", res);
 	} else {
-		printf("Connection accept Error.\n");
+		fprintf(stderr, "Connection accept Error.\n");
 		uv_close((uv_handle_t*)client, on_close);
 	}
 }
 
 int set_server_data(const char* addrc, int p, int b)
 {
+	fprintf(stdout, "Seting server data.\n");
 	if (serverAddr)
 		free(serverAddr);
 	serverAddr = (char*)malloc(sizeof(char)*(strlen(addrc)+5));
@@ -102,17 +103,20 @@ void quit_server()
 	serverPort = 8000;
 	serverAddr = NULL;
 	serverLock = 0;
+	fprintf(stdout, "Server will now quit.\n");
 }
 
 int new_server()
 {
 	struct sockaddr_in addr;
 
+	fprintf(stdout, "Start a new server.\n");
+
 	if (serverLock) {
-		printf("Server start Error: Server already started\n");
+		fprintf(stderr, "Server start Error: Server already started\n");
 		return SERVER_ALREADY_STARTED;
 	} else if (!serverAddr) {
-		printf("Server start Error: Server address didn't set\n");
+		fprintf(stderr, "Server start Error: Server address didn't set\n");
 		return SERVER_DATA_ERROR;
 	}
 	serverLock = 1;
@@ -127,22 +131,18 @@ int new_server()
 	int res = uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
 	
 	if (res < 0) {
-		printf("Bind Error at %s:%d .%s\n", serverAddr, serverPort, uv_strerror(res));
+		fprintf(stderr, "Bind Error at %s:%d .%s\n", serverAddr, serverPort, uv_strerror(res));
 		return 0;
 	}
 
 	res = uv_listen((uv_stream_t*)&server, serverBacklog, on_new_connection);
 
 	if (res) {
-		printf("Listen Error on port %d: %s\n", serverPort, uv_strerror(res));
+		fprintf(stderr, "Listen Error on port %d: %s\n", serverPort, uv_strerror(res));
 	} else {
 		res = uv_run(loop, UV_RUN_DEFAULT);
-		printf("UV_RUN returned code: %d\n", res);
+		fprintf(stdout, "UV_RUN returned code: %d\n", res);
 	}
-	
-	//printf("free now?");
-	//free(loop);
-	//printf("free end?");
 
 	quit_server();
 
