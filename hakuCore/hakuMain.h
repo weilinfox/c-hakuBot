@@ -2,6 +2,8 @@
 #define HAKUMAIN_H
 
 #include "errorMsg.h"
+#include "json.h"
+#include "api.h"
 #include <stdio.h>
 
 #define QUIT_FLAG -1009

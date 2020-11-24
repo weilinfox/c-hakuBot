@@ -131,6 +131,61 @@ int new_thread (const char* msg)
 	fprintf(stdout, "Parse result END.\n\n");
 
 
+	void *jsonData = NULL;
+	char *msgType = NULL;
+	char *message = NULL;
+	int64_t id;
+	int res;
+
+	fprintf(stdout, "Echo process start.\n");
+	res = getJsonValue(httpData.httpData, &jsonData, TYPE_STRING, "post_type");
+	if (!res) {
+		fprintf(stdout, "post_type is: %s\n", (char*)jsonData);
+		if (!strcmp((char*)jsonData, "message")) {
+			free(jsonData);
+			jsonData = NULL;
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_STRING, "message_type");
+			fprintf(stdout, "message_type is: %s %d\n", (char*)jsonData, res);
+			msgType = (char*)jsonData;
+			jsonData = NULL;
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_STRING, "raw_message");
+			fprintf(stdout, "raw_message is: %s %d\n", (char*)jsonData, res);
+			message = (char*)jsonData;
+			jsonData = NULL;
+			if (!strcmp(msgType, "group"))
+				res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "group_id");
+			else if (!strcmp(msgType, "private"))
+				res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "user_id");
+			else
+				fprintf(stdout, "msgType: What's this??\n");
+			if (jsonData) {
+				fprintf(stdout, "ID is: %ld %d\n", *(int64_t*)jsonData, res);
+				id = *(int64_t*)jsonData;
+				free(jsonData);
+				jsonData = NULL;
+
+				fprintf(stdout, "Try to send message...\n");
+
+				if (msgType[0] == 'p')
+					res = send_private_message(message, id, 0);
+				else
+					res = send_group_message(message, id, 0);
+				fprintf(stdout, "send_xxx_message returned: %d\n", res);
+			}
+
+		} else {
+			fprintf(stdout, "Not a message.\n");
+			free(jsonData);
+			jsonData = NULL;
+		}
+	} else {
+		fprintf(stderr, "post_type member returned error code: %d\n", res);
+		fprintf(stderr, "Error jsonData is: %s\n", (char*)jsonData);
+		free(jsonData);
+		jsonData = NULL;
+	}
+
+
 	/*Quit command*/
 	if (!strcmp(httpData.httpPath, "/QUIT")) {
 		for (i = 0; i < httpData.headerNum; i++) {

@@ -4,13 +4,12 @@ A new version of hakuBot writen by C.
 ## DEP
 + libcurl
 + libuv
-+ libhttp-parser
 + libjson-glib
 
 
 ## API
 
-### sendRequest.h
+### request.h
 
 ```c
 typedef struct {
@@ -66,6 +65,18 @@ enum jsonDataType = {TYPE_INIT64, TYPE_STRING};
 ```c
 int getJsonValue (const char *jsonData, void **resultPointer, int dataType, const char *memberName);
 ```
+
+### api.h
+
+```c
+/*auto_escape usually be 0*/
+int send_private_message(const char* msg, int64_t qq_id, int auto_escape);
+int send_group_message(const char* msg, int64_t group_id, int auto_escape);
+int get_friend_list(char* returnData[]);
+int get_group_list(char* returnData[]);
+int get_group_member_list(int64_t group_id, char* returnData[]);
+```
+
 
 ### errorMsg.h
 Set error flags

@@ -15,12 +15,25 @@ void getTextCb (JsonObject *obj, const gchar *key, JsonNode *node, gpointer user
 int getJsonValue(const char *data, void **result, int type, const char *member)
 {
 	if (*result != NULL) return POINTER_NONEMPTY_ERROR;
+	if (data == NULL) {
+		if (type == TYPE_STRING) {
+			*result = malloc(sizeof(char)*MAX_ERROR_MSG_LEN);
+			snprintf((char*)*result, MAX_ERROR_MSG_LEN-2, "Json data is empty!");
+			return JSON_PARSE_ERROR;
+		} else if (type == TYPE_INT64) {
+			*result = malloc(sizeof(gint64));
+			**(gint64**)result = 1;
+			return JSON_PARSE_ERROR;
+		} else {
+			return MULTIPLE_ERRORS;
+		}
+	}
 	JsonParser *jsonParser = json_parser_new();
 	GError *error = NULL;
 	json_parser_load_from_data(jsonParser, data, strlen(data), &error);
 
 	if (error) {
-		printf("Json parse error.\n");
+		fprintf(stderr, "Json parse error.\n");
 		if (type == TYPE_STRING) {
 			*result = malloc(sizeof(char)*MAX_ERROR_MSG_LEN);
 			snprintf((char*)*result, MAX_ERROR_MSG_LEN-2, "Json parse Error: %s", error->message);
@@ -35,13 +48,13 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 			return MULTIPLE_ERRORS;
 		}
 	}
-	printf("Json parse finished\n");
-
+	fprintf(stdout, "Json parse finished\n");
+	
 	/*search and get data*/
 	JsonNode *rootNode = json_parser_get_root(jsonParser);
 	JsonObject *rootObject = json_node_get_object(rootNode);
 	if (json_object_has_member(rootObject, member)) {
-		printf("Json parse: find member\n");
+		fprintf(stdout, "Json parse: find member\n");
 		JsonNode *thisNode = json_object_get_member(rootObject, member);
 		GType thisType = json_node_get_value_type(thisNode);
 		//json_object_foreach_member(memberObject, getTextCb, text);
@@ -58,12 +71,12 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 		}
 	} else {
 		g_object_unref(jsonParser);
-		printf("Json parse: no such member\n");
+		fprintf(stderr, "Json parse: no such member\n");
 		if (type == TYPE_STRING) {
 			*result = malloc(sizeof(char)*16);
 			strcpy((char*)*result, "No such member.");
 		} else if (type == TYPE_INT64) {
-			*result = malloc(sizeof(int64_t));
+			*result = malloc(sizeof(gint64));
 			**(gint64**)result = NO_SUCH_MEMBER_ERROR;
 		} else {
 			return MULTIPLE_ERRORS;
@@ -73,6 +86,6 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 
 	g_object_unref(jsonParser);
 
-	return 0;
+	return NO_ERROR;
 }
 

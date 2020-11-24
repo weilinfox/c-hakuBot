@@ -11,6 +11,6 @@ typedef struct {
 	char *data;
 } resp_data;
 
-CURLcode getData (resp_data *respData, const char *url, int num, ...);
+CURLcode getData (resp_data *respData, const char *url, int num, .../*parm name, parm data*/);
 
 #endif

@@ -28,7 +28,7 @@ size_t writeToString (char *ptr, size_t size, size_t nmemb, void *userdata)
 CURLcode getData (resp_data *respData, const char *url, int num, ...)
 {
 	int length, i, j;
-	char *urlParms, *parms;
+	char *urlFinal, *parms;
 	va_list arg_ptr;
 	CURL *easyConnect = NULL;
 	CURLcode res = UNKOWN_ERROR;
@@ -36,40 +36,46 @@ CURLcode getData (resp_data *respData, const char *url, int num, ...)
 	if (num & 0x01) return SET_PARMS_ERROR;
 	if (respData->length || respData->data) return CURL_BUFFER_ERROR;
 	
-	urlParms = (char*)malloc(sizeof(int) * (MAX_PARMS_SIZE + 5));
-	length = 0;
+	length = strlen(url);
+	urlFinal = (char*)malloc(sizeof(int) * (length + MAX_PARMS_SIZE + 5));
+	strcpy(urlFinal, url);
 
 	/*Parameters*/
 	va_start(arg_ptr, num);
 	for (i = 0; i < num/2; i++) {
-		urlParms[length++] = '?';
+		if (i == 0)
+			urlFinal[length++] = '?';
+		else
+			urlFinal[length++] = '&';
 		parms = va_arg(arg_ptr, char*);
 		for (j = 0; parms[j]; j++) {
-			urlParms[length++] = parms[j];
+			urlFinal[length++] = parms[j];
 			if (length > MAX_PARMS_SIZE) {
 				va_end(arg_ptr);
-				free(urlParms);
+				free(urlFinal);
 				return OUT_OF_RANGE_ERROR;
 			}
 		}
-		urlParms[length++] = '=';
+		urlFinal[length++] = '=';
 		parms = va_arg(arg_ptr, char*);
 		for (j = 0; parms[j]; j++) {
-			urlParms[length++] = parms[j];
+			urlFinal[length++] = parms[j];
 			if (length > MAX_PARMS_SIZE) {
 				va_end(arg_ptr);
-				free(urlParms);
+				free(urlFinal);
 				return OUT_OF_RANGE_ERROR;
 			}
 		}
 	}
 	va_end(arg_ptr);
-	urlParms[length] = '\0';
+	urlFinal[length] = '\0';
+
+	fprintf(stdout, "URL is: %s\n", urlFinal);
 
 	easyConnect = curl_easy_init();
 	if (easyConnect) {
-		curl_easy_setopt(easyConnect, CURLOPT_URL, url);
-		curl_easy_setopt(easyConnect, CURLOPT_HTTPGET, urlParms);
+		curl_easy_setopt(easyConnect, CURLOPT_URL, urlFinal);
+		/*curl_easy_setopt(easyConnect, CURLOPT_HTTPGET, urlParms);*/
 		curl_easy_setopt(easyConnect, CURLOPT_TIMEOUT, 60);
 		curl_easy_setopt(easyConnect, CURLOPT_CONNECTTIMEOUT, 10);
 		curl_easy_setopt(easyConnect, CURLOPT_WRITEFUNCTION, writeToString);

@@ -1,4 +1,5 @@
-#include "hakuCore/sendRequest.h"
+#include "hakuCore/request.h"
+#include "hakuCore/json.h"
 
 #include <stdio.h>
 
@@ -25,12 +26,18 @@ int main()
 	
 	//res = getData(&data, URL, 2, "c", "a");
 	res = getData(&data, URL, 0);
+	printf("%s\n", curl_easy_strerror(res));
+	if (res) return -1;
 
-	curl_global_cleanup();
+	void *text;
+	res = getJsonValue(data.data, &text, TYPE_STRING, "text");
+
+	printf("%d\n", res);
 	printf("%s", data.data);
 	//printf("%s\n", errorMsg);
-	printf("\n%d\n", res);
-	printf("%s\n", curl_easy_strerror(res));
+	free(text);
+
+	curl_global_cleanup();
 
 	return 0;
 }

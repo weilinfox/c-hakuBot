@@ -91,10 +91,13 @@ int set_server_data(const char* addrc, int p, int b)
 	fprintf(stdout, "Seting server data.\n");
 	if (serverAddr)
 		free(serverAddr);
-	serverAddr = (char*)malloc(sizeof(char)*(strlen(addrc)+5));
+	serverAddr = (char*)malloc(sizeof(char)*(strlen(addrc)+2));
+	if (!serverAddr)
+		return MALLOC_ERROR;
 	strcpy(serverAddr, addrc);
 	serverPort = p;
 	serverBacklog = b;
+	return NO_ERROR;
 }
 
 void quit_server()

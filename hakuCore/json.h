@@ -8,6 +8,7 @@
 
 enum jsonDataType {TYPE_INT64, TYPE_STRING};
 
+/*use macro to improve it?*/
 int getJsonValue (const char *jsonData, void **resultPointer, int dataType, const char *memberName);
 
 

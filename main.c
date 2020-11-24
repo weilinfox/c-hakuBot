@@ -5,6 +5,8 @@
 
 char *url = NULL;
 int64_t port = 8000;
+int64_t sendport = 8001;
+char *token = NULL;
 int64_t backlog = 0;
 
 int data_preload(void)
@@ -36,6 +38,8 @@ int data_preload(void)
 
 	void *voidUrl = NULL;
 	void *voidPort = NULL;
+	void *voidSPort = NULL;
+	void *voidToken = NULL;
 	void *voidData = NULL;
 	int res = NO_ERROR;
 
@@ -52,6 +56,23 @@ int data_preload(void)
 		voidUrl = voidPort = NULL;
 		return res;
 	}
+	res = getJsonValue(configData, &voidSPort, TYPE_INT64, "SEND_PORT");
+	if (res) {
+		free(voidPort);
+		free(voidUrl);
+		free(voidSPort);
+		voidUrl = voidPort = voidSPort = NULL;
+		return res;
+	}
+	res = getJsonValue(configData, &voidToken, TYPE_STRING, "TOKEN");
+	if (res) {
+		free(voidPort);
+		free(voidUrl);
+		free(voidSPort);
+		free(voidToken);
+		voidUrl = voidPort = voidSPort = voidToken = NULL;
+		return res;
+	}
 	res = getJsonValue(configData, &voidData, TYPE_INT64, "BACKLOG");
 	if (res) {
 		fprintf(stderr, "Failed to get backlog value. Code: %ld\n", *(int64_t*)voidData);
@@ -64,10 +85,15 @@ int data_preload(void)
 
 	url = (char*)voidUrl;
 	port = *(int64_t*)voidPort;
+	sendport = *(int64_t*)voidSPort;
+	token = (char*)voidToken;
 
-	printf("Server will bind with: %s:%ld, backlog is %ld\n", url, port, backlog);
+	fprintf(stdout, "Server will bind with: %s:%ld, backlog is %ld\n", url, port, backlog);
+	fprintf(stdout, "Request will be send to port: %ld\n", sendport);
+	fprintf(stdout, "Access-token is: %s\n", token);
 
-	free(voidPort);
+
+	free(voidData);
 	free(configData);
 
 	return res;
@@ -85,6 +111,7 @@ int global_init(void)
 
 void global_cleanup(void)
 {
+	clear_api_data();
 	curl_global_cleanup();
 	/*global varieble*/
 	free(url);
@@ -105,38 +132,12 @@ int main()
 	}
 
 	set_server_data(url, port, backlog);
+	set_api_data(url, sendport, token);
 
 	res = new_server();
 
 	fprintf(stdout, "Server returned code: %d\n", res);
 
-
-/*
-	char URL[] = "http://api.heerdev.top:4995/nemusic/random";
-
-	CURLcode res;
-	resp_data data = {
-		.data = NULL,
-		.length = 0
-	};
-	
-
-	res = getData(&data, URL, 0);
-
-	printf("%d\n", res);
-	//printf("Origin data: %s\n", data.data);
-	if (res) return -2;
-
-	void *text = NULL;
-
-	res = getJsonValue(data.data, &text, TYPE_STRING, "text");
-
-	printf("getJsonValue return with %d\n", res);
-	//printf("in main text pointer is: %p", text);
-	printf("Get Msg:\n%s\n", (char*)text);
-
-	free(text);
-*/
 	global_cleanup();
 
 	return 0;

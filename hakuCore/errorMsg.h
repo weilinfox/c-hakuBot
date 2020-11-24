@@ -6,6 +6,7 @@
 #define WARNING -20
 #define POINTER_NONEMPTY_ERROR -1
 #define OUT_OF_RANGE_ERROR -2
+#define MALLOC_ERROR -21
 #define MULTIPLE_ERRORS -3
 #define UNKOWN_ERROR -4
 
@@ -34,7 +35,10 @@
 #define JSON_PARSE_ERROR -17
 #define NO_SUCH_MEMBER_ERROR -18
 
+/*Api*/
+#define SEND_MESSAGE_ERROR -22
+
 /*Other*/
-#define ERROR_CODE_MAX -20
+#define ERROR_CODE_MAX -22
 
 #endif
