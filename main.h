@@ -15,8 +15,8 @@
 const char* initConfigData = "{\n"
 	"\t\"URL\": \"127.0.0.1\",\n"
 	"\t\"PORT\": 8000\n"
-	"\t\"SEND_PORT\": 8001\n",
-	"\t\"TOKEN\": \"inuyasha\"\n",
+	"\t\"SEND_PORT\": 8001\n"
+	"\t\"TOKEN\": \"inuyasha\"\n"
 	"}\n";
 
 

@@ -41,4 +41,6 @@
 /*Other*/
 #define ERROR_CODE_MAX -22
 
+char* get_error_msg(int errorCode);
+
 #endif

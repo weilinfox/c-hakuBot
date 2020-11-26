@@ -1,4 +1,4 @@
-#include "hakuMain.h"
+#include "hakuMind.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +13,8 @@ size_t strToInt (const char* msg)
 	}
 	return ans;
 }
+
+
 
 int new_thread (const char* msg)
 {	
