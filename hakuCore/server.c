@@ -1,5 +1,5 @@
 #include "server.h"
-#include "hakuMain.h"
+#include "hakuMind.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

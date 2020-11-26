@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include "hakuCore/errorMsg.h"
+#include "hakuCore/hakuMind.h"
 #include "hakuCore/request.h"
 #include "hakuCore/server.h"
 #include "hakuCore/json.h"

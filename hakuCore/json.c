@@ -14,8 +14,10 @@ void getTextCb (JsonObject *obj, const gchar *key, JsonNode *node, gpointer user
 
 int getJsonValue(const char *data, void **result, int type, const char *member)
 {
-	if (*result != NULL) return POINTER_NONEMPTY_ERROR;
+	if (result != NULL && *result != NULL) return POINTER_NONEMPTY_ERROR;
 	if (data == NULL) {
+		if (result == NULL)
+			return JSON_PARSE_ERROR;
 		if (type == TYPE_STRING) {
 			*result = malloc(sizeof(char)*MAX_ERROR_MSG_LEN);
 			snprintf((char*)*result, MAX_ERROR_MSG_LEN-2, "Json data is empty!");
@@ -34,6 +36,11 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 
 	if (error) {
 		fprintf(stderr, "Json parse error.\n");
+		if (result == NULL) {
+			g_error_free(error);
+			g_object_unref(jsonParser);
+			return JSON_PARSE_ERROR;
+		}
 		if (type == TYPE_STRING) {
 			*result = malloc(sizeof(char)*MAX_ERROR_MSG_LEN);
 			snprintf((char*)*result, MAX_ERROR_MSG_LEN-2, "Json parse Error: %s", error->message);
@@ -47,6 +54,8 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 		} else {
 			return MULTIPLE_ERRORS;
 		}
+	} else {
+		free(error);
 	}
 	fprintf(stdout, "Json parse finished\n");
 	
@@ -59,19 +68,30 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 		GType thisType = json_node_get_value_type(thisNode);
 		//json_object_foreach_member(memberObject, getTextCb, text);
 		if (type == TYPE_STRING && g_type_is_a(thisType, G_TYPE_STRING)) {
+			if (result == NULL) {
+				g_object_unref(jsonParser);
+				return NO_ERROR;
+			}
 			char *text = NULL;
 			text = (char*)json_node_get_string(thisNode);
 			*result = malloc(sizeof(char)*(strlen(text)+2));
 			strcpy((char*)*result, text);
 		} else if (type == TYPE_INT64 && g_type_is_a(thisType, G_TYPE_INT64)) {
+			if (result == NULL) {
+				g_object_unref(jsonParser);
+				return NO_ERROR;
+			}
 			*result = malloc(sizeof(gint64));
 			**(gint64**)result = json_node_get_int(thisNode);
 		} else {
+			g_object_unref(jsonParser);
 			return MULTIPLE_ERRORS;
 		}
 	} else {
 		g_object_unref(jsonParser);
 		fprintf(stderr, "Json parse: no such member\n");
+		if (result == NULL)
+			return NO_SUCH_MEMBER_ERROR;
 		if (type == TYPE_STRING) {
 			*result = malloc(sizeof(char)*16);
 			strcpy((char*)*result, "No such member.");

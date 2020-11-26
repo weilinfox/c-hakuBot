@@ -2,6 +2,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+hakuLive hakuSelf;
+time_list_node_t *messageTimeListHead = NULL;	/*List to record msg time*/
+time_list_node_t *messageTimeListTail = NULL;
+int64_t messageNumPerSecond = 0;			/*message num per second*/
+
+void awaken_haku ()
+{
+	hakuSelf.selfId = hakuSelf.heartBeat = 0;
+	hakuSelf.lastHeartBeat = 0;
+	hakuSelf.wakeTime = time(NULL);
+
+	messageTimeListHead = (time_list_node_t*)malloc(sizeof(time_list_node_t));
+	messageTimeListTail = messageTimeListHead;
+	messageTimeListTail->next = NULL;
+	messageNumPerSecond = 0;
+}
+
+void haku_sleep()
+{
+	time_list_node_t *listHead = messageTimeListHead, *listNode;
+	while (listHead) {
+		listNode = listHead;
+		listHead = listHead->next;
+		fprintf(stdout, "Free node with time: %ld\n", listNode->time);
+		free(listNode);
+	}
+}
 
 size_t strToInt (const char* msg)
 {
@@ -14,10 +43,9 @@ size_t strToInt (const char* msg)
 	return ans;
 }
 
-
-
-int new_thread (const char* msg)
+new_event_t* httpMsgToEvent (const char* msg)
 {	
+	new_event_t *newEvent = (new_event_t*)malloc(sizeof(new_event_t));
 	http_header_t httpData;
 	
 	size_t pos = 0;
@@ -25,6 +53,9 @@ int new_thread (const char* msg)
 	size_t i;
 	int errorFlag;
 
+	newEvent->error = NO_ERROR;
+
+	/*parse http data*/
 	httpData.headerNum = 0;
 	httpData.dataLen = 0;
 	httpData.httpData = NULL;
@@ -33,14 +64,17 @@ int new_thread (const char* msg)
 	for (i = 0; msg[pos+i] != ' ' && i < HTTP_METHOD_LEN; i++) {
 		httpData.httpMethod[i] = msg[pos+i];
 	}
-	if (i == HTTP_METHOD_LEN)
-		return METHOD_LENGTH_EXCEED;
+	if (i == HTTP_METHOD_LEN) {
+		newEvent->error = METHOD_LENGTH_EXCEED;
+		return newEvent;
+	}
 	httpData.httpMethod[i] = '\0';
 	pos += i;
 
 	if (strcmp(httpData.httpMethod, "POST") && \
 		strcmp(httpData.httpMethod, "GET")) {
-		return UNKOWN_METHOD;
+		newEvent->error = UNKOWN_METHOD;
+		return newEvent;
 	}
 
 	while (msg[pos] == ' ') pos++;
@@ -48,7 +82,8 @@ int new_thread (const char* msg)
 		httpData.httpPath[i] = msg[pos+i];
 	}
 	if (i == HTTP_METHOD_LEN) {
-		return PATH_LENGTH_EXCEED;
+		newEvent->error = PATH_LENGTH_EXCEED;
+		return newEvent;
 	}
 	httpData.httpPath[i] = '\0';
 	pos += i;
@@ -58,7 +93,8 @@ int new_thread (const char* msg)
 		httpData.httpProtocol[i] = msg[pos+i];
 	}
 	if (i == HTTP_PROTOCOL_LEN) {
-		return PROTOCOL_LENGTH_EXCEED;
+		newEvent->error = PROTOCOL_LENGTH_EXCEED;
+		return newEvent;
 	}
 	httpData.httpProtocol[i] = '\0';
 	pos += i + 2;
@@ -98,7 +134,8 @@ int new_thread (const char* msg)
 			free(httpData.httpHeader[i]);
 			free(httpData.httpHeaderData[i]);
 		}
-		return HEADER_PARSE_ERROR;
+		newEvent->error = HEADER_PARSE_ERROR;
+		return newEvent;
 	}
 	pos += 2;
 
@@ -115,7 +152,8 @@ int new_thread (const char* msg)
 				free(httpData.httpHeaderData[i]);
 			}
 			free(httpData.httpData);
-			return DATA_PARSE_ERROR;
+			newEvent->error = DATA_PARSE_ERROR;
+			return newEvent;
 		}
 	}
 
@@ -132,71 +170,182 @@ int new_thread (const char* msg)
 	}
 	fprintf(stdout, "Parse result END.\n\n");
 
-
+	/*generate new go-cqhttp event*/
 	void *jsonData = NULL;
-	char *msgType = NULL;
-	char *message = NULL;
-	int64_t id;
 	int res;
 
-	fprintf(stdout, "Echo process start.\n");
 	res = getJsonValue(httpData.httpData, &jsonData, TYPE_STRING, "post_type");
-	if (!res) {
-		fprintf(stdout, "post_type is: %s\n", (char*)jsonData);
-		if (!strcmp((char*)jsonData, "message")) {
-			free(jsonData);
-			jsonData = NULL;
-			res = getJsonValue(httpData.httpData, &jsonData, TYPE_STRING, "message_type");
-			fprintf(stdout, "message_type is: %s %d\n", (char*)jsonData, res);
-			msgType = (char*)jsonData;
-			jsonData = NULL;
-			res = getJsonValue(httpData.httpData, &jsonData, TYPE_STRING, "raw_message");
-			fprintf(stdout, "raw_message is: %s %d\n", (char*)jsonData, res);
-			message = (char*)jsonData;
-			jsonData = NULL;
-			if (!strcmp(msgType, "group"))
-				res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "group_id");
-			else if (!strcmp(msgType, "private"))
-				res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "user_id");
-			else
-				fprintf(stdout, "msgType: What's this??\n");
-			if (jsonData) {
-				fprintf(stdout, "ID is: %ld %d\n", *(int64_t*)jsonData, res);
-				id = *(int64_t*)jsonData;
-				free(jsonData);
-				jsonData = NULL;
-
-				fprintf(stdout, "Try to send message...\n");
-
-				if (msgType[0] == 'p')
-					res = send_private_message(message, id, 0);
-				else
-					res = send_group_message(message, id, 0);
-				fprintf(stdout, "send_xxx_message returned: %d\n", res);
-			}
-
-		} else {
-			fprintf(stdout, "Not a message.\n");
-			free(jsonData);
-			jsonData = NULL;
-		}
-	} else {
-		fprintf(stderr, "post_type member returned error code: %d\n", res);
-		fprintf(stderr, "Error jsonData is: %s\n", (char*)jsonData);
+	if (res == NO_ERROR) {
+		strncpy(newEvent->eventType, (char*)jsonData, EVENT_NAME_LEN-1);
 		free(jsonData);
 		jsonData = NULL;
-	}
+		if (!strcmp(newEvent->eventType, "message")) {
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_STRING, "message_type");
+			if (res) {
+				newEvent->error = res;
+			} else {
+				strncpy(newEvent->eventName, (char*)jsonData, EVENT_NAME_LEN-1);
+			}
+			free(jsonData);
+			jsonData = NULL;
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_STRING, "raw_message");
+			if (res) {
+				newEvent->error = res;
+			} else {
+				strncpy(newEvent->eventMessage, (char*)jsonData, EVENT_MESSAGE_LEN);
+			}
+			free(jsonData);
+			jsonData = NULL;
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "self_id");
+			if (res) {
+				newEvent->error = res;
+			} else {
+				newEvent->selfId = *(int64_t*)jsonData;
+			}
+			free(jsonData);
+			jsonData = NULL;
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "user_id");
+			if (res) {
+				newEvent->error = res;
+			} else {
+				newEvent->userId = *(int64_t*)jsonData;
+			}
+			free(jsonData);
+			jsonData = NULL;
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "time");
+			if (res) {
+				newEvent->error = res;
+			} else {
+				newEvent->eventTime = *(time_t*)jsonData;
+			}
+			free(jsonData);
+			jsonData = NULL;
+			if (!strcmp(newEvent->eventName, "group")) {
+				res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "user_id");
+				if (res) {
+					newEvent->error = res;
+				} else {
+					newEvent->groupId = *(int64_t*)jsonData;
+				}
+				free(jsonData);
+				jsonData = NULL;
+			} else {
+				newEvent->groupId = 0;
+			}
+		} else if (!strcmp(newEvent->eventType, "meta_event")) {
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_STRING, "meta_event_type");
+			if (res) {
+				newEvent->error = res;
+			} else {
+				strncpy(newEvent->eventName, (char*)jsonData, EVENT_NAME_LEN-1);
+			}
+			free(jsonData);
+			jsonData = NULL;
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "interval");
+			if (res) {
+				newEvent->error = res;
+			} else {
+				newEvent->eventInterval = *(int64_t*)jsonData;
+			}
+			free(jsonData);
+			jsonData = NULL;
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "self_id");
+			if (res) {
+				newEvent->error = res;
+			} else {
+				newEvent->selfId = *(int64_t*)jsonData;
+			}
+			free(jsonData);
+			jsonData = NULL;
+			res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "time");
+			if (res) {
+				newEvent->error = res;
+			} else {
+				newEvent->eventTime = *(int64_t*)jsonData;
+			}
+			free(jsonData);
+			jsonData = NULL;
 
-
-	/*Quit command*/
-	if (!strcmp(httpData.httpPath, "/QUIT")) {
-		for (i = 0; i < httpData.headerNum; i++) {
-			free(httpData.httpHeader[i]);
-			free(httpData.httpHeaderData[i]);
 		}
-		free(httpData.httpData);
-		return QUIT_FLAG;
 	} else {
-		return NO_ERROR;
+		/*Quit command*/
+		if (!strcmp(httpData.httpPath, "/QUIT")) {
+			newEvent->error = 0;
+			snprintf(newEvent->eventType, EVENT_NAME_LEN-1, "QUIT");
+		}
 	}
+
+	for (int i = 0; i < httpData.headerNum; i++) {
+		free(httpData.httpHeader[i]);
+		free(httpData.httpHeaderData[i]);
+	}
+	free(httpData.httpData);
+
+	return newEvent;
 }
+
+int new_thread(const char *msg)
+{
+	int res;
+	new_event_t* newEvent = httpMsgToEvent(msg);
+	res = newEvent->error;
+
+	if (res) {
+		fprintf(stderr, "errorCode %ld\n", newEvent->error);
+	} else {
+		fprintf(stdout, "No Error.\n");
+		fprintf(stdout, "eventType: %s\n", newEvent->eventType);
+		fprintf(stdout, "eventName: %s\n", newEvent->eventName);
+		fprintf(stdout, "eventMessage: %s\n", newEvent->eventMessage);
+		fprintf(stdout, "eventTime: %lld\n", (long long)newEvent->eventTime);
+		fprintf(stdout, "eventInterval: %lld\n", (long long)newEvent->eventInterval);
+		fprintf(stdout, "groupId: %ld, userId %ld, selfId %ld\n", newEvent->groupId, newEvent->userId, newEvent->selfId);
+		fprintf(stdout, "returnCode %ld\n", newEvent->error);
+
+		if (!strcmp(newEvent->eventType, "QUIT")) {
+			free(newEvent);
+			return QUIT_FLAG;
+		}
+
+		if (!strcmp(newEvent->eventType, "message")) {
+			if (hakuSelf.selfId == 0)
+				hakuSelf.selfId = newEvent->selfId;
+			/*add new message*/
+			messageNumPerSecond++;
+			messageTimeListTail->next = (time_list_node_t*)malloc(sizeof(time_list_node_t));
+			messageTimeListTail->next->time = newEvent->eventTime;
+			messageTimeListTail->next->next = NULL;
+			messageTimeListTail = messageTimeListTail->next;
+		} else if (!strcmp(newEvent->eventType, "meta_event")) {
+			if (!strcmp(newEvent->eventName, "heartbeat")) {
+				hakuSelf.heartBeat++;
+				hakuSelf.lastHeartBeat = newEvent->eventTime;
+				if (hakuSelf.selfId == 0)
+					hakuSelf.selfId = newEvent->selfId;
+
+				fprintf(stdout, "messageNumPerSecond: %ld\n", messageNumPerSecond);
+
+				/*remove timeout message*/
+				time_list_node_t *listHead = messageTimeListHead->next;
+				time_list_node_t *listNode = NULL;
+				time_t timeNow = time(NULL);
+				fprintf(stderr, "Delta time: %d\n", listHead?(int)(timeNow-listHead->time):0);
+				while (listHead && timeNow - listHead->time >= 60) {
+					listNode = listHead;
+					listHead = listHead->next;
+					fprintf(stderr, "Free node with time: %ld\n", listNode->time);
+					free(listNode);
+					messageNumPerSecond--;
+				}
+				messageTimeListHead->next = listHead;
+				if (listHead == NULL)
+					messageTimeListTail = messageTimeListHead;
+			}
+			free(newEvent);
+		}
+	}
+
+	return res;
+}
+
+

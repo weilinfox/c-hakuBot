@@ -112,6 +112,7 @@ int global_init(void)
 void global_cleanup(void)
 {
 	clear_api_data();
+	haku_sleep();
 	curl_global_cleanup();
 	/*global varieble*/
 	free(url);
@@ -133,6 +134,7 @@ int main()
 
 	set_server_data(url, port, backlog);
 	set_api_data(url, sendport, token);
+	awaken_haku();	/*awaken haku~*/
 
 	res = new_server();
 

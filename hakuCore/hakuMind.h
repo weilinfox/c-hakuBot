@@ -6,7 +6,7 @@
 #include "api.h"
 #include <stdio.h>
 
-#define QUIT_FLAG -1009
+#define QUIT_FLAG 1009
 
 #define HTTP_METHOD_LEN 8
 #define HTTP_PATH_LEN 128
@@ -40,7 +40,13 @@ typedef struct {
 	int64_t groupId;
 	int64_t userId;
 	int64_t selfId;
+	int64_t error;
 } new_event_t;
+
+typedef struct time_list_node {
+	time_t time;
+	struct time_list_node* next;
+} time_list_node_t;
 
 typedef struct {
 	int64_t selfId;
@@ -48,6 +54,9 @@ typedef struct {
 	time_t lastHeartBeat;
 	time_t wakeTime;
 } hakuLive;
+
+void awaken_haku(void);
+void haku_sleep(void);
 
 int new_thread(const char *httpMsg);
 
