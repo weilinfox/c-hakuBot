@@ -24,7 +24,7 @@ typedef struct {
 CURLcode getData (resp_data *respData, const char *url, int num, ...);
 ```
 
-### hakuMain.h
+### hakuMind.h
 
 ```c
 typedef struct {
@@ -37,9 +37,27 @@ typedef struct {
 	size_t headerNum;						/*num of header data*/
 	size_t dataLen;							/*length of data*/
 } http_header_t;
+
+
+typedef struct time_list_node {
+	time_t time;
+	struct time_list_node* next;
+} time_list_node_t;
+
+typedef struct {
+	int64_t selfId;
+	int64_t heartBeat;
+	time_t lastHeartBeat;
+	time_t wakeTime;
+} hakuLive;
 ```
 
+
 ```c
+/*set haku data*/
+void awake_haku(void);
+void haku_sleep(void);
+int haku_master_attach(int64_t id);
 /*start a new parsing thread*/
 /*httpMsg is origin http tcp data*/
 /*return code : 0 - no error, QUIT_FLAG - quit server*/
@@ -47,6 +65,13 @@ int new_thread(const char *httpMsg);
 ```
 
 ### server.h
+
+```c
+typedef struct {
+	uv_write_t wbuf;
+	uv_buf_t buf;
+} write_buf_t;
+```
 
 ```c
 /*start a new http server return uv_run result*/
@@ -69,7 +94,29 @@ int getJsonValue (const char *jsonData, void **resultPointer, int dataType, cons
 ### api.h
 
 ```c
+typedef struct {
+	char eventType[EVENT_NAME_LEN];
+	char eventName[EVENT_NAME_LEN];
+	char eventMessage[EVENT_MESSAGE_LEN];
+	char eventOtherData[EVENT_DATA_LEN];
+	time_t eventTime;
+	time_t eventInterval;
+	int64_t groupId;
+	int64_t userId;
+	int64_t selfId;
+	int64_t error;
+} event_t, new_event_t;
+```
+
+```c
+int set_api_data(const char *url, int64_t port, const char* access_token);
+void clear_api_data(void);
+```
+
+
+```c
 /*auto_escape usually be 0*/
+int reply_message(const event_t *newEvent, const char* replyMessage);
 int send_private_message(const char* msg, int64_t qq_id, int auto_escape);
 int send_group_message(const char* msg, int64_t group_id, int auto_escape);
 int get_friend_list(char* returnData[]);
