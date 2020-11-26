@@ -7,9 +7,43 @@
 hakuLive hakuSelf;
 time_list_node_t *messageTimeListHead = NULL;	/*List to record msg time*/
 time_list_node_t *messageTimeListTail = NULL;
-int64_t messageNumPerSecond = 0;			/*message num per second*/
+int64_t messageNumPerSecond = 0;		/*message num per second*/
+int64_t masterId[MASTER_NUM_MAX];		/*id of administrators*/
+int masterNum = 0;
 
-void awaken_haku ()
+size_t strToInt (const char* msg)
+{
+	size_t ans = 0, i = 0;
+	while (msg[i]) {
+		ans *= 10;
+		ans += msg[i] - '0';
+		i++;
+	}
+	return ans;
+}
+
+int haveSubstr (const char* str, const char* substr)
+{
+	size_t strLen = strlen(str);
+	size_t substrLen = strlen(substr);
+	size_t i, j;
+	int flag = 0;
+	fprintf(stdout, "strLen %ld, substrLen %ld\n", strLen, substrLen);
+	if (strLen < substrLen) return 0;
+	for (i = 0; !flag && i <= strLen - substrLen; i++) {
+		for (j = 0; i + j < strLen && j < substrLen; j++) {
+			if (substr[j] != str[i+j])
+				break;
+		}
+		if (j == substrLen)
+			flag = 1;
+	}
+	fprintf(stdout, "Find finished\n");
+
+	return flag;
+}
+
+void awake_haku ()
 {
 	hakuSelf.selfId = hakuSelf.heartBeat = 0;
 	hakuSelf.lastHeartBeat = 0;
@@ -32,15 +66,75 @@ void haku_sleep()
 	}
 }
 
-size_t strToInt (const char* msg)
+int haku_master_attach(int64_t id)
 {
-	size_t ans = 0, i = 0;
-	while (msg[i]) {
-		ans *= 10;
-		ans += msg[i] - '0';
-		i++;
+	if (masterNum >= MASTER_NUM_MAX)
+		return OUT_OF_RANGE_ERROR;
+	else
+		masterId[masterNum++] = id;
+	fprintf(stdout, "Attached master id: %ld\n", masterId[masterNum-1]);
+
+	return 0;
+}
+
+char* catchInsideCommand (const event_t *newEvent)
+{
+	char *replyMsg;
+	int i;
+	time_t timeNow = time(NULL);
+	int isMaster = 0;
+	
+	/*check master*/
+	for (i = 0; i < masterNum; i++) {
+		if (masterId[i] == newEvent->userId) {
+			isMaster = 1;
+			break;
+		}
 	}
-	return ans;
+
+	/*inside command*/
+	if (haveSubstr(newEvent->eventMessage, "hakuzousu") || \
+			haveSubstr(newEvent->eventMessage, "白蔵主") || \
+			haveSubstr(newEvent->eventMessage, "白藏主")) {
+		fprintf(stdout, "Get substr\n");
+		if (!isMaster) {
+			replyMsg = (char*)malloc(sizeof(char)*32);
+			snprintf(replyMsg, 31, "何人竟敢直呼吾名？");
+			return replyMsg;
+		}
+		if (haveSubstr(newEvent->eventMessage, "日志")) {
+			replyMsg = (char*)malloc(sizeof(char)*64);
+			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat/((int64_t)hakuSelf.wakeTime-timeNow), (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
+			reply_message(newEvent, replyMsg);
+			return replyMsg;
+		} else if (haveSubstr(newEvent->eventMessage, "休息")) {
+			replyMsg = (char*)malloc(sizeof(char)*32);
+			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
+			return replyMsg;
+		} else {
+			replyMsg = (char*)malloc(sizeof(char*)*32);
+			snprintf(replyMsg, 31, "[CQ:face,id=175]");
+			return replyMsg;
+		}
+	} else if (haveSubstr(newEvent->eventMessage, "haku") || \
+			haveSubstr(newEvent->eventMessage, "小白")) {
+		if (haveSubstr(newEvent->eventMessage, "日志")) {
+			replyMsg = (char*)malloc(sizeof(char)*64);
+			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat/((int64_t)hakuSelf.wakeTime-timeNow), (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
+			reply_message(newEvent, replyMsg);
+			return replyMsg;
+		} else if (isMaster && haveSubstr(newEvent->eventMessage, "休息")) {
+			replyMsg = (char*)malloc(sizeof(char)*32);
+			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
+			return replyMsg;
+		} else {
+			replyMsg = (char*)malloc(sizeof(char*)*32);
+			if (isMaster) snprintf(replyMsg, 31, "[CQ:face,id=175]");
+			else snprintf(replyMsg, 31, "[CQ:face,id=179]");
+			return replyMsg;
+		}
+	}
+	return NULL;
 }
 
 new_event_t* httpMsgToEvent (const char* msg)
@@ -221,7 +315,7 @@ new_event_t* httpMsgToEvent (const char* msg)
 			free(jsonData);
 			jsonData = NULL;
 			if (!strcmp(newEvent->eventName, "group")) {
-				res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "user_id");
+				res = getJsonValue(httpData.httpData, &jsonData, TYPE_INT64, "group_id");
 				if (res) {
 					newEvent->error = res;
 				} else {
@@ -286,12 +380,13 @@ new_event_t* httpMsgToEvent (const char* msg)
 
 int new_thread(const char *msg)
 {
-	int res;
 	new_event_t* newEvent = httpMsgToEvent(msg);
-	res = newEvent->error;
+	int res = newEvent->error;
+	char *replyMsg;
+	time_t timeNow = time(NULL);
 
 	if (res) {
-		fprintf(stderr, "errorCode %ld\n", newEvent->error);
+		fprintf(stderr, "error Code %ld\n", newEvent->error);
 	} else {
 		fprintf(stdout, "No Error.\n");
 		fprintf(stdout, "eventType: %s\n", newEvent->eventType);
@@ -300,7 +395,7 @@ int new_thread(const char *msg)
 		fprintf(stdout, "eventTime: %lld\n", (long long)newEvent->eventTime);
 		fprintf(stdout, "eventInterval: %lld\n", (long long)newEvent->eventInterval);
 		fprintf(stdout, "groupId: %ld, userId %ld, selfId %ld\n", newEvent->groupId, newEvent->userId, newEvent->selfId);
-		fprintf(stdout, "returnCode %ld\n", newEvent->error);
+		fprintf(stdout, "return Code %ld\n", newEvent->error);
 
 		if (!strcmp(newEvent->eventType, "QUIT")) {
 			free(newEvent);
@@ -310,12 +405,23 @@ int new_thread(const char *msg)
 		if (!strcmp(newEvent->eventType, "message")) {
 			if (hakuSelf.selfId == 0)
 				hakuSelf.selfId = newEvent->selfId;
-			/*add new message*/
+
+			/*add new message to list*/
 			messageNumPerSecond++;
 			messageTimeListTail->next = (time_list_node_t*)malloc(sizeof(time_list_node_t));
-			messageTimeListTail->next->time = newEvent->eventTime;
+			messageTimeListTail->next->time = timeNow;
 			messageTimeListTail->next->next = NULL;
 			messageTimeListTail = messageTimeListTail->next;
+
+			/*catch inside command*/
+			replyMsg = catchInsideCommand(newEvent);
+			if (replyMsg && strcmp(replyMsg, "_QUIT__FLAG__BY__INUYASHA_")) {
+				reply_message(newEvent, replyMsg);
+			} else if (replyMsg) {
+				free(replyMsg);
+				return QUIT_FLAG;
+			}
+			free(replyMsg);
 		} else if (!strcmp(newEvent->eventType, "meta_event")) {
 			if (!strcmp(newEvent->eventName, "heartbeat")) {
 				hakuSelf.heartBeat++;
@@ -328,7 +434,7 @@ int new_thread(const char *msg)
 				/*remove timeout message*/
 				time_list_node_t *listHead = messageTimeListHead->next;
 				time_list_node_t *listNode = NULL;
-				time_t timeNow = time(NULL);
+
 				fprintf(stderr, "Delta time: %d\n", listHead?(int)(timeNow-listHead->time):0);
 				while (listHead && timeNow - listHead->time >= 60) {
 					listNode = listHead;
@@ -341,9 +447,9 @@ int new_thread(const char *msg)
 				if (listHead == NULL)
 					messageTimeListTail = messageTimeListHead;
 			}
-			free(newEvent);
 		}
 	}
+	free(newEvent);
 
 	return res;
 }

@@ -28,7 +28,7 @@ size_t writeToString (char *ptr, size_t size, size_t nmemb, void *userdata)
 CURLcode getData (resp_data *respData, const char *url, int num, ...)
 {
 	int length, i, j;
-	char *urlFinal, *parms;
+	char *urlFinal, *parmsEncode, *parms;
 	va_list arg_ptr;
 	CURL *easyConnect = NULL;
 	CURLcode res = UNKOWN_ERROR;
@@ -48,21 +48,26 @@ CURLcode getData (resp_data *respData, const char *url, int num, ...)
 		else
 			urlFinal[length++] = '&';
 		parms = va_arg(arg_ptr, char*);
-		for (j = 0; parms[j]; j++) {
-			urlFinal[length++] = parms[j];
+		parmsEncode = curl_easy_escape(easyConnect, parms, strlen(parms));
+		for (j = 0; parmsEncode[j]; j++) {
+			urlFinal[length++] = parmsEncode[j];
 			if (length > MAX_PARMS_SIZE) {
 				va_end(arg_ptr);
 				free(urlFinal);
+				free(parmsEncode);
 				return OUT_OF_RANGE_ERROR;
 			}
 		}
 		urlFinal[length++] = '=';
+		free(parmsEncode);
 		parms = va_arg(arg_ptr, char*);
-		for (j = 0; parms[j]; j++) {
-			urlFinal[length++] = parms[j];
+		parmsEncode = curl_easy_escape(easyConnect, parms, strlen(parms));
+		for (j = 0; parmsEncode[j]; j++) {
+			urlFinal[length++] = parmsEncode[j];
 			if (length > MAX_PARMS_SIZE) {
 				va_end(arg_ptr);
 				free(urlFinal);
+				free(parmsEncode);
 				return OUT_OF_RANGE_ERROR;
 			}
 		}
@@ -75,7 +80,7 @@ CURLcode getData (resp_data *respData, const char *url, int num, ...)
 	easyConnect = curl_easy_init();
 	if (easyConnect) {
 		curl_easy_setopt(easyConnect, CURLOPT_URL, urlFinal);
-		/*curl_easy_setopt(easyConnect, CURLOPT_HTTPGET, urlParms);*/
+		curl_easy_setopt(easyConnect, CURLOPT_HTTPGET, 1L);
 		curl_easy_setopt(easyConnect, CURLOPT_TIMEOUT, 60);
 		curl_easy_setopt(easyConnect, CURLOPT_CONNECTTIMEOUT, 10);
 		curl_easy_setopt(easyConnect, CURLOPT_WRITEFUNCTION, writeToString);

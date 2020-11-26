@@ -8,13 +8,15 @@ int64_t port = 8000;
 int64_t sendport = 8001;
 char *token = NULL;
 int64_t backlog = 0;
+int64_t masterQid[MASTER_NUM_MAX];
+int mstNum;
 
 int data_preload(void)
 {
 	FILE *configFile = NULL;
 	char *configData;
 	int i = 0;
-	char ch;
+	char *tmpC, ch;
 
 	printf("Reading data from %s\n", CONFIG_FILE);
 
@@ -43,12 +45,14 @@ int data_preload(void)
 	void *voidData = NULL;
 	int res = NO_ERROR;
 
+	/*URL*/
 	res = getJsonValue(configData, &voidUrl, TYPE_STRING, "URL");
 	if (res) {
 		free(voidUrl);
 		voidUrl = NULL;
 		return res;
 	}
+	/*PORT*/
 	res = getJsonValue(configData, &voidPort, TYPE_INT64, "PORT");
 	if (res) {
 		free(voidPort);
@@ -56,6 +60,7 @@ int data_preload(void)
 		voidUrl = voidPort = NULL;
 		return res;
 	}
+	/*SEND_PORT*/
 	res = getJsonValue(configData, &voidSPort, TYPE_INT64, "SEND_PORT");
 	if (res) {
 		free(voidPort);
@@ -64,6 +69,7 @@ int data_preload(void)
 		voidUrl = voidPort = voidSPort = NULL;
 		return res;
 	}
+	/*TOKEN*/
 	res = getJsonValue(configData, &voidToken, TYPE_STRING, "TOKEN");
 	if (res) {
 		free(voidPort);
@@ -73,6 +79,26 @@ int data_preload(void)
 		voidUrl = voidPort = voidSPort = voidToken = NULL;
 		return res;
 	}
+	/*MASTER_ID*/
+	mstNum = 0;
+	tmpC = (char*)malloc(sizeof(char)*16);
+	while (mstNum < MASTER_NUM_MAX) {
+		sprintf(tmpC, "MASTER%d", mstNum);
+		res = getJsonValue(configData, &voidData, TYPE_INT64, tmpC);
+		if (!res) {
+			masterQid[mstNum] = *(int64_t*)voidData;
+			free(voidData);
+			voidData = NULL;
+		} else {
+			fprintf(stderr, "Failed to get MASTER%d. Code: %ld\n", mstNum, *(int64_t*)voidData);
+			break;
+		}
+		mstNum++;
+	}
+	free(voidData);
+	voidData = NULL;
+	free(tmpC);
+	/*BACKLOG*/
 	res = getJsonValue(configData, &voidData, TYPE_INT64, "BACKLOG");
 	if (res) {
 		fprintf(stderr, "Failed to get backlog value. Code: %ld\n", *(int64_t*)voidData);
@@ -121,7 +147,7 @@ void global_cleanup(void)
 
 int main()
 {
-	int res;
+	int res, i;
 
 	res = global_init();
 	if (res == WARNING) {
@@ -134,7 +160,11 @@ int main()
 
 	set_server_data(url, port, backlog);
 	set_api_data(url, sendport, token);
-	awaken_haku();	/*awaken haku~*/
+	awake_haku();	/*awaken haku~*/
+	for (i = 0; i < mstNum; i++) {
+		res = haku_master_attach(masterQid[i]);
+		if (res) break;
+	}
 
 	res = new_server();
 

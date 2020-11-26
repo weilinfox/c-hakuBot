@@ -104,6 +104,16 @@ int send_group_message(const char* msg, int64_t gid, int auto_escape)
 	}
 }
 
+int reply_message(const event_t *newEvent, const char* msg)
+{
+	if (!strcmp(newEvent->eventName, "group")) {
+		return send_group_message(msg, newEvent->groupId, 0);
+	} else if (!strcmp(newEvent->eventName, "private")) {
+		return send_private_message(msg, newEvent->userId, 0);
+	} else {
+		return MULTIPLE_ERRORS;
+	}
+}
 
 int get_friend_list(char* data[])
 {

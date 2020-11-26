@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #define QUIT_FLAG 1009
+#define MASTER_NUM_MAX 128
 
 #define HTTP_METHOD_LEN 8
 #define HTTP_PATH_LEN 128
@@ -14,10 +15,6 @@
 #define HTTP_HEADER_NUM 32
 #define HTTP_HEADER_LEN 32
 #define HTTP_HEADERDATA_LEN 256
-
-#define EVENT_NAME_LEN 16
-#define EVENT_MESSAGE_LEN 8192
-#define EVENT_DATA_LEN 32
 
 typedef struct {
 	char httpMethod[HTTP_METHOD_LEN];
@@ -29,19 +26,6 @@ typedef struct {
 	size_t headerNum;
 	size_t dataLen;
 } http_header_t;
-
-typedef struct {
-	char eventType[EVENT_NAME_LEN];
-	char eventName[EVENT_NAME_LEN];
-	char eventMessage[EVENT_MESSAGE_LEN];
-	char eventOtherData[EVENT_DATA_LEN];
-	time_t eventTime;
-	time_t eventInterval;
-	int64_t groupId;
-	int64_t userId;
-	int64_t selfId;
-	int64_t error;
-} new_event_t;
 
 typedef struct time_list_node {
 	time_t time;
@@ -55,8 +39,9 @@ typedef struct {
 	time_t wakeTime;
 } hakuLive;
 
-void awaken_haku(void);
+void awake_haku(void);
 void haku_sleep(void);
+int haku_master_attach(int64_t id);
 
 int new_thread(const char *httpMsg);
 
