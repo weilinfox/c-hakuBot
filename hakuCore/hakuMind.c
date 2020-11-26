@@ -96,7 +96,7 @@ char* catchInsideCommand (const event_t *newEvent)
 	if (haveSubstr(newEvent->eventMessage, "hakuzousu") || \
 			haveSubstr(newEvent->eventMessage, "白蔵主") || \
 			haveSubstr(newEvent->eventMessage, "白藏主")) {
-		fprintf(stdout, "Get substr\n");
+		fprintf(stdout, "Get substr hakuzousu.\n");
 		if (!isMaster) {
 			replyMsg = (char*)malloc(sizeof(char)*32);
 			snprintf(replyMsg, 31, "何人竟敢直呼吾名？");
@@ -104,8 +104,7 @@ char* catchInsideCommand (const event_t *newEvent)
 		}
 		if (haveSubstr(newEvent->eventMessage, "日志")) {
 			replyMsg = (char*)malloc(sizeof(char)*64);
-			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat/((int64_t)hakuSelf.wakeTime-timeNow), (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
-			reply_message(newEvent, replyMsg);
+			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat*60/((int64_t)(timeNow-hakuSelf.wakeTime))+1, (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
 			return replyMsg;
 		} else if (haveSubstr(newEvent->eventMessage, "休息")) {
 			replyMsg = (char*)malloc(sizeof(char)*32);
@@ -118,10 +117,10 @@ char* catchInsideCommand (const event_t *newEvent)
 		}
 	} else if (haveSubstr(newEvent->eventMessage, "haku") || \
 			haveSubstr(newEvent->eventMessage, "小白")) {
+		fprintf(stdout, "Get substr haku.\n");
 		if (haveSubstr(newEvent->eventMessage, "日志")) {
 			replyMsg = (char*)malloc(sizeof(char)*64);
-			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat/((int64_t)hakuSelf.wakeTime-timeNow), (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
-			reply_message(newEvent, replyMsg);
+			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat*60/((int64_t)(timeNow-hakuSelf.wakeTime))+1, (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
 			return replyMsg;
 		} else if (isMaster && haveSubstr(newEvent->eventMessage, "休息")) {
 			replyMsg = (char*)malloc(sizeof(char)*32);
@@ -416,6 +415,7 @@ int new_thread(const char *msg)
 			/*catch inside command*/
 			replyMsg = catchInsideCommand(newEvent);
 			if (replyMsg && strcmp(replyMsg, "_QUIT__FLAG__BY__INUYASHA_")) {
+				fprintf(stdout, "Get reply message.\n");
 				reply_message(newEvent, replyMsg);
 			} else if (replyMsg) {
 				free(replyMsg);
