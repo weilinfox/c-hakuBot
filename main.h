@@ -5,6 +5,7 @@
 #include "hakuCore/hakuMind.h"
 #include "hakuCore/request.h"
 #include "hakuCore/server.h"
+#include "hakuCore/plugin.h"
 #include "hakuCore/json.h"
 #include "hakuCore/api.h"
 
