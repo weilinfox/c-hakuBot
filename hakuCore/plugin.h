@@ -20,7 +20,7 @@ typedef struct so_file_tree {
 } so_name_tree_t;
 
 int init_so_file_tree (void);
-so_file_t* open_so_file (so_name_tree_t *headNode, const char *name);
-void free_so_file_tree (so_name_tree_t *headNode);
+so_file_t* open_so_file (/*so_name_tree_t *headNode,*/ const char *name);
+void free_so_file_tree (void/*so_name_tree_t *headNode*/);
 
 #endif

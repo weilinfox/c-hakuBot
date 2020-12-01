@@ -91,6 +91,29 @@ enum jsonDataType = {TYPE_INIT64, TYPE_STRING};
 int getJsonValue (const char *jsonData, void **resultPointer, int dataType, const char *memberName);
 ```
 
+### plugin.h
+
+```c
+typedef char* (*func_t)(event_t*);
+
+typedef struct {
+	void* handle;
+	func_t *func;
+} so_file_t;
+
+typedef struct so_file_tree {
+	char data;
+	so_file_t* soFile;
+	struct so_file_tree *LNode, *RNode, *FNode;
+} so_name_tree_t;
+```
+
+```c
+int init_so_file_tree (void);
+so_file_t* open_so_file (const char *name);
+void free_so_file_tree (void);
+```
+
 ### api.h
 
 ```c
