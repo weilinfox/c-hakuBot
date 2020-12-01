@@ -99,8 +99,9 @@ so_file_t* open_so_file (/*so_name_tree_t *head,*/ const char *name)
 		fprintf(stdout, "Open the so file\n");
 		node->soFile = (so_file_t*)malloc(sizeof(so_file_t));
 		node->soFile->handle = dlopen(fileName, RTLD_LAZY);
+		fprintf(stdout, "so file handle: %p\n", node->soFile->handle);
 		if (node->soFile->handle)
-			node->soFile->func = (func_t*)dlsym(node->soFile->handle, PLUGIN_FUNC_NAME);
+			node->soFile->func = (func_t)dlsym(node->soFile->handle, PLUGIN_FUNC_NAME);
 		if (node->soFile->handle && node->soFile->func)
 			return node->soFile;
 

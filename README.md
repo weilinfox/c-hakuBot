@@ -6,6 +6,11 @@ A new version of hakuBot writen by C.
 + libuv
 + libjson-glib
 
+fedora:
++ libcurl-devel
++ libuv-devel
++ json-glib-devel
+
 
 ## API
 

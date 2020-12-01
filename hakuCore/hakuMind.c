@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <time.h>
 
 hakuLive hakuSelf;
@@ -43,16 +44,19 @@ int haveSubstr (const char* str, const char* substr)
 	return flag;
 }
 
-void awake_haku ()
+void awake_haku (char index)
 {
 	hakuSelf.selfId = hakuSelf.heartBeat = 0;
 	hakuSelf.lastHeartBeat = 0;
 	hakuSelf.wakeTime = time(NULL);
+	hakuSelf.index = index;
 
 	messageTimeListHead = (time_list_node_t*)malloc(sizeof(time_list_node_t));
 	messageTimeListTail = messageTimeListHead;
 	messageTimeListTail->next = NULL;
 	messageNumPerSecond = 0;
+
+	fprintf(stdout, "Haku wake up with index: %c\n", hakuSelf.index);
 }
 
 void haku_sleep()
@@ -77,7 +81,7 @@ int haku_master_attach(int64_t id)
 	return 0;
 }
 
-char* catchInsideCommand (const event_t *newEvent)
+char* catch_inside_command (const event_t *newEvent)
 {
 	char *replyMsg;
 	int i;
@@ -377,6 +381,37 @@ new_event_t* httpMsgToEvent (const char* msg)
 	return newEvent;
 }
 
+char* parse_plugin_command(event_t *newEvent)
+{
+	char *command = (char*)malloc(sizeof(char)*MAX_SOFILE_NAME_LEN);
+	char *respstr = NULL;
+	int i;
+	if ((newEvent->eventMessage)[0] != hakuSelf.index) {
+		free(command);
+		return NULL;
+	}
+
+	for (i = 1; i < MAX_SOFILE_NAME_LEN - 2 && (newEvent->eventMessage)[i] && \
+		((newEvent->eventMessage[i]) == '_' || isdigit((newEvent->eventMessage)[i]) || isalpha((newEvent->eventMessage)[i])); i++) {
+		command[i-1] = (newEvent->eventMessage)[i];
+	}
+	if (i < MAX_SOFILE_NAME_LEN - 2) {
+		command[i-1] = '\0';
+		fprintf(stdout, "Get plugin name: %s\n", command);
+		so_file_t *pluginp = open_so_file(command);
+		if (pluginp) {
+			fprintf(stdout, "Caught this plugin.\n");
+			respstr = (pluginp->func)(newEvent);
+		}
+		free(pluginp);
+	}
+	free(command);
+
+	fprintf(stdout, "return %p\n", respstr);
+
+	return respstr;
+}
+
 int new_thread(const char *msg)
 {
 	new_event_t* newEvent = httpMsgToEvent(msg);
@@ -413,13 +448,21 @@ int new_thread(const char *msg)
 			messageTimeListTail = messageTimeListTail->next;
 
 			/*catch inside command*/
-			replyMsg = catchInsideCommand(newEvent);
+			replyMsg = catch_inside_command(newEvent);
 			if (replyMsg && strcmp(replyMsg, "_QUIT__FLAG__BY__INUYASHA_")) {
 				fprintf(stdout, "Get reply message.\n");
 				reply_message(newEvent, replyMsg);
 			} else if (replyMsg) {
 				free(replyMsg);
 				return QUIT_FLAG;
+			}
+			free(replyMsg);
+
+			/*parse command*/
+			replyMsg = parse_plugin_command(newEvent);
+			if (replyMsg) {
+				fprintf(stdout, "Get plugin msg.\n");
+				reply_message(newEvent, replyMsg);
 			}
 			free(replyMsg);
 		} else if (!strcmp(newEvent->eventType, "meta_event")) {

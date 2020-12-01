@@ -2,6 +2,7 @@
 #define HAKUMAIN_H
 
 #include "errorMsg.h"
+#include "plugin.h"
 #include "json.h"
 #include "api.h"
 #include <stdio.h>
@@ -37,9 +38,10 @@ typedef struct {
 	int64_t heartBeat;
 	time_t lastHeartBeat;
 	time_t wakeTime;
+	char index;
 } hakuLive;
 
-void awake_haku(void);
+void awake_haku(char index);
 void haku_sleep(void);
 int haku_master_attach(int64_t id);
 

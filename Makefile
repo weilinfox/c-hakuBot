@@ -1,5 +1,7 @@
-main: request.o server.o hakuMind.o json.o api.o errorMsg.o plugin.o main.o
-	cc request.o server.o hakuMind.o json.o api.o errorMsg.o plugin.o main.o `pkg-config --libs json-glib-1.0` -lcurl -luv -ldl -Wl,-z,origin -Wl,-rpath='$ORIGIN' -o main -g
+PLUGIN_DIR = pluginsrc
+
+main: request.o server.o hakuMind.o json.o api.o errorMsg.o plugin.o main.o plugins
+	cc request.o server.o hakuMind.o json.o api.o errorMsg.o plugin.o main.o `pkg-config --libs json-glib-1.0` -lcurl -luv -rdynamic -ldl -Wl,-z,origin -Wl,-rpath='$$ORIGIN' -o main -g
 main.o: main.c main.h hakuCore/errorMsg.h
 	cc -c main.c `pkg-config --cflags json-glib-1.0` -o main.o
 hakuMind.o: hakuCore/hakuMind.c hakuCore/hakuMind.h hakuCore/errorMsg.h
@@ -16,8 +18,17 @@ errorMsg.o: hakuCore/errorMsg.c hakuCore/errorMsg.h
 	cc -c hakuCore/errorMsg.c -o errorMsg.o
 plugin.o: hakuCore/plugin.c hakuCore/plugin.h
 	cc -c hakuCore/plugin.c -o plugin.o
+plugins: $(PLUGIN_DIR)/
+	$(MAKE) -C $(PLUGIN_DIR)
 
 .PHONY: clean
 clean:
 	-rm *.o
 	-rm main
+	$(MAKE) -C $(PLUGIN_DIR) clean
+
+.PHONY: install
+install:
+	-mkdir -p c-hakuBot/plugin
+	-cp main c-hakuBot/hakuBot
+	-cp $(PLUGIN_DIR)/*.so c-hakuBot/plugin/.

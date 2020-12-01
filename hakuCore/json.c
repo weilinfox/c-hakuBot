@@ -30,6 +30,7 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 			return MULTIPLE_ERRORS;
 		}
 	}
+	fprintf(stdout, "start getJsonValue\n");
 	JsonParser *jsonParser = json_parser_new();
 	GError *error = NULL;
 	json_parser_load_from_data(jsonParser, data, strlen(data), &error);

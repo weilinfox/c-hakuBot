@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 char *url = NULL;
 int64_t port = 8000;
 int64_t sendport = 8001;
 char *token = NULL;
+char comIndex = '/';
 int64_t backlog = 0;
 int64_t masterQid[MASTER_NUM_MAX];
 int mstNum;
@@ -98,6 +100,18 @@ int data_preload(void)
 	free(voidData);
 	voidData = NULL;
 	free(tmpC);
+	/*INDEX*/
+	res = getJsonValue(configData, &voidData, TYPE_STRING, "INDEX");
+	if (res) {
+		fprintf(stderr, "Failed to get index char. Code: %s\n", (char*)voidData);
+		free(voidData);
+		voidData = NULL;
+		res = WARNING;
+	} else {
+		comIndex = ((char*)voidData)[0];
+		free(voidData);
+		voidData = NULL;
+	}
 	/*BACKLOG*/
 	res = getJsonValue(configData, &voidData, TYPE_INT64, "BACKLOG");
 	if (res) {
@@ -138,7 +152,6 @@ int global_init(void)
 void global_cleanup(void)
 {
 	clear_api_data();
-	haku_sleep();
 	curl_global_cleanup();
 	/*global varieble*/
 	free(url);
@@ -161,7 +174,7 @@ int main()
 	set_server_data(url, port, backlog);
 	set_api_data(url, sendport, token);
 	init_so_file_tree();
-	awake_haku();	/*awaken haku~*/
+	awake_haku(comIndex);	/*awaken haku~*/
 	for (i = 0; i < mstNum; i++) {
 		res = haku_master_attach(masterQid[i]);
 		if (res) break;
@@ -170,6 +183,11 @@ int main()
 	res = new_server();
 
 	fprintf(stdout, "Server returned code: %d\n", res);
+
+	haku_sleep();
+	free_so_file_tree();
+
+	sleep(2);	/*wait for haku_sleep()*/
 
 	global_cleanup();
 

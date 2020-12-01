@@ -10,7 +10,7 @@ typedef char* (*func_t)(event_t*);
 
 typedef struct {
 	void* handle;
-	func_t *func;
+	func_t func;
 } so_file_t;
 
 typedef struct so_file_tree {
