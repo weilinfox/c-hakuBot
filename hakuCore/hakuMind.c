@@ -403,7 +403,6 @@ char* parse_plugin_command(event_t *newEvent)
 			fprintf(stdout, "Caught this plugin.\n");
 			respstr = (pluginp->func)(newEvent);
 		}
-		free(pluginp);
 	}
 	free(command);
 

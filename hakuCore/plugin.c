@@ -143,24 +143,26 @@ void free_so_file_node (so_name_tree_t *head)
 	/*free so file tree and close all .so*/
 	if (head == NULL) return;
 	so_name_tree_t *rNode, *lNode = head;
-	so_name_tree_t *lastNode;
+	so_name_tree_t *lastNode = NULL;
 
 	while (lNode) {
-		if (lNode->RNode) {
-			free_so_file_node(lNode->RNode);
-		} else {
-			lastNode = lNode;
-			lNode = lNode->LNode;
-		}
-		if (lastNode->soFile) {
-			dlclose(lastNode->soFile->handle);
-		}
 		free(lastNode);
+		if (lNode->soFile) {
+			dlclose(lNode->soFile->handle);
+		}
+		if (lNode->RNode) {
+			fprintf(stdout, "Find R node\n");
+			free_so_file_node(lNode->RNode);
+		}
+		lastNode = lNode;
+		lNode = lNode->LNode;
 	}
+	free(lastNode);
 }
 
 void free_so_file_tree ()
 {
 	fprintf(stdout, "Free the so file tree.\n");
 	free_so_file_node(soNameTreeHead);
+	soNameTreeHead = NULL;
 }
