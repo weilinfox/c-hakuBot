@@ -3,6 +3,7 @@
 
 #include "api.h"
 #include "errorMsg.h"
+#include <Python.h>
 
 #define MAX_SOFILE_NAME_LEN 32
 
@@ -20,7 +21,10 @@ typedef struct so_file_tree {
 } so_name_tree_t;
 
 int init_so_file_tree (void);
+int init_python_plugin (void);
 so_file_t* open_so_file (/*so_name_tree_t *headNode,*/ const char *name);
 void free_so_file_tree (void/*so_name_tree_t *headNode*/);
+PyObject* get_python_plugin(char* name);
+char* run_python_plugin(PyObject *pyPlugin, event_t *newEvent);
 
 #endif

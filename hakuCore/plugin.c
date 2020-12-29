@@ -166,3 +166,63 @@ void free_so_file_tree ()
 	free_so_file_node(soNameTreeHead);
 	soNameTreeHead = NULL;
 }
+
+int init_python_plugin (void)
+{
+	char *sysCom = (char*)malloc(sizeof(char) * 64);
+	sprintf(sysCom, "sys.path.append('./%s')", PLUGIN_DIR_NAME);
+	PyRun_SimpleString("import sys");
+	PyRun_SimpleString(sysCom);
+	free(sysCom);
+	return NO_ERROR;
+}
+
+PyObject* get_python_plugin (char *name)
+{
+	//char *fileName = (char*)malloc(sizeof(char)*MAX_SOFILE_NAME_LEN);
+	PyObject *pModule = NULL;
+	//sprintf(fileName, "%s.%s", PLUGIN_DIR_NAME, name);
+
+	fprintf(stdout, "Try to open python plugin: %s .\n", name);
+	pModule = PyImport_ImportModule(name);
+	//free(fileName);
+
+	return pModule;
+}
+
+char* run_python_plugin(PyObject *plugin, event_t *newEvent)
+{
+	char *returnMsg = NULL;
+	if (!plugin || !newEvent) return NULL;
+
+	fprintf(stdout, "Try to find python function\n");
+	PyObject *pFunc = PyObject_GetAttrString(plugin, PLUGIN_FUNC_NAME);
+	if (pFunc) {
+		char *cStringMsg = NULL;
+
+		PyObject* pArgs = Py_BuildValue("{s:s,s:s,s:i,s:i,s:i,s:s,s:s}", \
+			"post_type", newEvent->eventType, \
+			"message_type", newEvent->eventName, \
+			"user_id", newEvent->userId, \
+			"group_id", newEvent->groupId, \
+			"self_id", newEvent->selfId, \
+			"raw_message", newEvent->eventMessage, \
+			"message", newEvent->eventMessage \
+			);
+
+		fprintf(stdout, "Call function.\n");
+		PyObject *pReply = PyObject_CallFunction(pFunc, "O", pArgs);
+
+		PyArg_Parse(pReply, "z", &cStringMsg);
+		returnMsg = (char*)malloc(sizeof(char)*(strlen(cStringMsg)+1));
+		strcpy(returnMsg, cStringMsg);
+		fprintf(stdout, "Plugin returned %s\n", returnMsg);
+
+		Py_CLEAR(pArgs);
+		Py_CLEAR(pReply);
+	}
+
+	Py_CLEAR(pFunc);
+
+	return returnMsg;
+}

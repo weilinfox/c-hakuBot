@@ -396,12 +396,21 @@ char* parse_plugin_command(event_t *newEvent)
 		command[i-1] = (newEvent->eventMessage)[i];
 	}
 	if (i < MAX_SOFILE_NAME_LEN - 2) {
+		/* .so plugins */
 		command[i-1] = '\0';
 		fprintf(stdout, "Get plugin name: %s\n", command);
 		so_file_t *pluginp = open_so_file(command);
 		if (pluginp) {
 			fprintf(stdout, "Caught this plugin.\n");
 			respstr = (pluginp->func)(newEvent);
+		} else {
+			/* python plugins */
+			PyObject *pyPlugin = get_python_plugin(command);
+			if (pyPlugin) {
+				fprintf(stdout, "Caught python plugin.\n");
+				respstr = run_python_plugin(pyPlugin, newEvent);
+				Py_CLEAR(pyPlugin);
+			}
 		}
 	}
 	free(command);
@@ -457,7 +466,7 @@ int new_thread(const char *msg)
 			}
 			free(replyMsg);
 
-			/*parse command*/
+			/*parse plugin command*/
 			replyMsg = parse_plugin_command(newEvent);
 			if (replyMsg) {
 				fprintf(stdout, "Get plugin msg.\n");

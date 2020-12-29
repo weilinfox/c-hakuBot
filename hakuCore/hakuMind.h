@@ -6,6 +6,7 @@
 #include "json.h"
 #include "api.h"
 #include <stdio.h>
+#include <Python.h>
 
 #define QUIT_FLAG 1009
 #define MASTER_NUM_MAX 128

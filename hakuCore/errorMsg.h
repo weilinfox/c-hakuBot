@@ -23,6 +23,9 @@
 #define CURL_BUFFER_ERROR -9
 #define SET_PARMS_ERROR -10
 
+/*Python*/
+#define PYTHON_INIT_ERROR -23
+
 /*Http*/
 #define UNKOWN_METHOD -11
 #define METHOD_LENGTH_EXCEED -12
@@ -39,7 +42,7 @@
 #define SEND_MESSAGE_ERROR -22
 
 /*Other*/
-#define ERROR_CODE_MAX -22
+#define ERROR_CODE_MAX -23
 
 char* get_error_msg(int errorCode);
 
