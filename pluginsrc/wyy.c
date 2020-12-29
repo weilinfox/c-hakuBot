@@ -6,43 +6,28 @@
 
 char* func (event_t *newEvent)
 {
-	//char URL[] = "https://www.ruanyifeng.com/blog/2015/02/make.html";
-	//char URL[] = "https://v1.hitokoto.cn";
 	char URL[] = "http://api.heerdev.top:4995/nemusic/random";
-	//CURL *easyConnect = NULL;
+	void *text = NULL;
 	CURLcode res;
 	resp_data *data = (resp_data*)malloc(sizeof(resp_data));
 	data->data = NULL;
 	data->length = 0;
-	//data.length = 0;
-	//data.data = NULL;
-	
-	//curl_global_init(CURL_GLOBAL_DEFAULT);
 
-	//easyConnect = curl_easy_init();
-	//res = curl_easy_setopt(easyConnect, CURLOPT_URL, URL);
-	//res = curl_easy_perform(easyConnect);
-	//curl_easy_cleanup(easyConnect);
-	
-	//res = getData(&data, URL, 2, "c", "a");
 	res = getData(data, URL, 0);
-	//fprintf(stdout, "%s\n", curl_easy_strerror(res));
-	fprintf(stdout, "%u ", res);
-	if (res != CURLE_OK) return NULL;
-	fprintf(stdout, "%u ", res);
-	fprintf(stdout, "%s\n", data->data);
 
-	void *text = NULL;
+	fprintf(stdout, "%u ", res);
+	if (res != CURLE_OK) {
+		text = malloc(sizeof(char)*64);
+		snprintf((char*)text, 63, "啊嘞嘞好像出错了，一定是wyy炸了不关小白！");
+		return (char*)text;
+	}
+
 	res = getJsonValue(data->data, &text, TYPE_STRING, "text");
 
-	//printf("%d\n", res);
-	//printf("%s", data.data);
-	//printf("%s\n", errorMsg);
-	//free(text);
-
-	//curl_global_cleanup();
-	fprintf(stdout, "code: %u", res);
-	if (res) fprintf(stderr, "wyy %s\n", (char*)text);
-	else return (char*)text;
+	if (res) {
+		char *errorMsg = (char*)malloc(sizeof(char)*(strlen((char*)text)+30));
+		sprintf(errorMsg, "好像返回了奇怪的东西: %s", (char*)text);
+		return errorMsg;
+	} else return (char*)text;
 }
 
