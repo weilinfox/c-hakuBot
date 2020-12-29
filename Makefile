@@ -30,4 +30,5 @@ clean:
 install:
 	-mkdir -p c-hakuBot/plugin
 	-cp main c-hakuBot/hakuBot
-	-cp $(PLUGIN_DIR)/*.so c-hakuBot/plugin/.
+	-cp $(PLUGIN_DIR)/*.so c-hakuBot/plugin/
+	-cp $(PLUGIN_DIR)/*.py c-hakuBot/plugin/
