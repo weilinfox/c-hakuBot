@@ -21,7 +21,7 @@ const char* initConfigData = "{\n"
 	"\t\"TOKEN\": \"inuyasha\",\n"
 	"\t\"MASTER0\": 0,\n"
 	"\t\"BLOCK0\": 0,\n"
-	"\t\"INDEX\": \"/\""
+	"\t\"INDEX\": \"/\"\n"
 	"}\n";
 
 

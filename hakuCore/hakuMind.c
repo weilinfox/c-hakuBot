@@ -10,7 +10,9 @@ time_list_node_t *messageTimeListHead = NULL;	/*List to record msg time*/
 time_list_node_t *messageTimeListTail = NULL;
 int64_t messageNumPerSecond = 0;		/*message num per second*/
 int64_t masterId[MASTER_NUM_MAX];		/*id of administrators*/
+int64_t blockId[MASTER_NUM_MAX];		/*id of blocklist*/
 int masterNum = 0;
+int blockNum = 0;
 char hakuVersion[] = "由狸赋予的初代版本号 wlf 2020-12-29";
 
 size_t strToInt (const char* msg)
@@ -78,6 +80,17 @@ int haku_master_attach(int64_t id)
 	else
 		masterId[masterNum++] = id;
 	fprintf(stdout, "Attached master id: %ld\n", masterId[masterNum-1]);
+
+	return 0;
+}
+
+int haku_block_attach(int64_t id)
+{
+	if (blockNum >= MASTER_NUM_MAX)
+		return OUT_OF_RANGE_ERROR;
+	else
+		blockId[blockNum++] = id;
+	fprintf(stdout, "Attached block id: %ld\n", blockId[blockNum-1]);
 
 	return 0;
 }

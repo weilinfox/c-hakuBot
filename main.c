@@ -14,6 +14,7 @@ int64_t backlog = 0;
 int64_t masterQid[MASTER_NUM_MAX];
 int64_t blockQid[MASTER_NUM_MAX];
 int mstNum;
+int blkNum;
 
 int data_preload(void)
 {
@@ -103,20 +104,20 @@ int data_preload(void)
 	voidData = NULL;
 	free(tmpC);
 	/*block_ID*/
-	mstNum = 0;
+	blkNum = 0;
 	tmpC = (char*)malloc(sizeof(char)*16);
-	while (mstNum < MASTER_NUM_MAX) {
-		sprintf(tmpC, "BLOCK%d", mstNum);
+	while (blkNum < MASTER_NUM_MAX) {
+		sprintf(tmpC, "BLOCK%d", blkNum);
 		res = getJsonValue(configData, &voidData, TYPE_INT64, tmpC);
 		if (!res) {
-			blockQid[mstNum] = *(int64_t*)voidData;
+			blockQid[blkNum] = *(int64_t*)voidData;
 			free(voidData);
 			voidData = NULL;
 		} else {
-			fprintf(stderr, "Failed to get BLOCK%d. Code: %ld\n", mstNum, *(int64_t*)voidData);
+			fprintf(stderr, "Failed to get BLOCK%d. Code: %ld\n", blkNum, *(int64_t*)voidData);
 			break;
 		}
-		mstNum++;
+		blkNum++;
 	}
 	free(voidData);
 	voidData = NULL;
@@ -202,6 +203,10 @@ int main()
 	awake_haku(comIndex);	/*awaken haku~*/
 	for (i = 0; i < mstNum; i++) {
 		res = haku_master_attach(masterQid[i]);
+		if (res) break;
+	}
+	for (i = 0; i < blkNum; i++) {
+		res = haku_block_attach(blockQid[i]);
 		if (res) break;
 	}
 

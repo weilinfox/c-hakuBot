@@ -45,6 +45,7 @@ typedef struct {
 void awake_haku(char index);
 void haku_sleep(void);
 int haku_master_attach(int64_t id);
+int haku_block_attach(int64_t id);
 
 int new_thread(const char *httpMsg);
 
