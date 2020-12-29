@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <Python.h>
 
 char *url = NULL;
 int64_t port = 8000;
@@ -143,6 +144,8 @@ int global_init(void)
 {
 	printf("Starting global init\n");
 	int res = NO_ERROR;
+	Py_Initialize();
+	if(!Py_IsInitialized()) return PYTHON_INIT_ERROR;
 	res = (int)curl_global_init(CURL_GLOBAL_DEFAULT);
 	if (res) return CURL_GLOBAL_INIT_ERROR;
 	res = data_preload();
@@ -152,6 +155,7 @@ int global_init(void)
 void global_cleanup(void)
 {
 	clear_api_data();
+	Py_Finalize();
 	curl_global_cleanup();
 	/*global varieble*/
 	free(url);
@@ -174,6 +178,7 @@ int main()
 	set_server_data(url, port, backlog);
 	set_api_data(url, sendport, token);
 	init_so_file_tree();
+	init_python_plugin();
 	awake_haku(comIndex);	/*awaken haku~*/
 	for (i = 0; i < mstNum; i++) {
 		res = haku_master_attach(masterQid[i]);

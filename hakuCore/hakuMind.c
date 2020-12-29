@@ -11,6 +11,7 @@ time_list_node_t *messageTimeListTail = NULL;
 int64_t messageNumPerSecond = 0;		/*message num per second*/
 int64_t masterId[MASTER_NUM_MAX];		/*id of administrators*/
 int masterNum = 0;
+char hakuVersion[] = "由狸赋予的初代版本号 wlf 2020-12-29";
 
 size_t strToInt (const char* msg)
 {
@@ -114,8 +115,12 @@ char* catch_inside_command (const event_t *newEvent)
 			replyMsg = (char*)malloc(sizeof(char)*32);
 			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
 			return replyMsg;
+		} else if (haveSubstr(newEvent->eventMessage, "版本") || haveSubstr(newEvent->eventMessage, "version")) {
+			replyMsg = (char*)malloc(sizeof(char)*128);
+			snprintf(replyMsg, 127, "小白的内核信息如下:\n%s", hakuVersion);
+			return replyMsg;
 		} else {
-			replyMsg = (char*)malloc(sizeof(char*)*32);
+			replyMsg = (char*)malloc(sizeof(char)*32);
 			snprintf(replyMsg, 31, "[CQ:face,id=175]");
 			return replyMsg;
 		}
@@ -130,8 +135,13 @@ char* catch_inside_command (const event_t *newEvent)
 			replyMsg = (char*)malloc(sizeof(char)*32);
 			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
 			return replyMsg;
+		} else if (haveSubstr(newEvent->eventMessage, "版本") || haveSubstr(newEvent->eventMessage, "version")) {
+			replyMsg = (char*)malloc(sizeof(char)*128);
+			if (isMaster) snprintf(replyMsg, 127, "小白的内核信息如下:\n%s", hakuVersion);
+			else snprintf(replyMsg, 127, "狸并没有赋予汝此权限，回应你就是小白最大的耐心。");
+			return replyMsg;
 		} else {
-			replyMsg = (char*)malloc(sizeof(char*)*32);
+			replyMsg = (char*)malloc(sizeof(char)*32);
 			if (isMaster) snprintf(replyMsg, 31, "[CQ:face,id=175]");
 			else snprintf(replyMsg, 31, "[CQ:face,id=179]");
 			return replyMsg;
