@@ -20,6 +20,7 @@ const char* initConfigData = "{\n"
 	"\t\"SEND_PORT\": 8001,\n"
 	"\t\"TOKEN\": \"inuyasha\",\n"
 	"\t\"MASTER0\": 0,\n"
+	"\t\"BLOCK0\": 0,\n"
 	"\t\"INDEX\": \"/\""
 	"}\n";
 

@@ -12,6 +12,7 @@ char *token = NULL;
 char comIndex = '/';
 int64_t backlog = 0;
 int64_t masterQid[MASTER_NUM_MAX];
+int64_t blockQid[MASTER_NUM_MAX];
 int mstNum;
 
 int data_preload(void)
@@ -94,6 +95,25 @@ int data_preload(void)
 			voidData = NULL;
 		} else {
 			fprintf(stderr, "Failed to get MASTER%d. Code: %ld\n", mstNum, *(int64_t*)voidData);
+			break;
+		}
+		mstNum++;
+	}
+	free(voidData);
+	voidData = NULL;
+	free(tmpC);
+	/*block_ID*/
+	mstNum = 0;
+	tmpC = (char*)malloc(sizeof(char)*16);
+	while (mstNum < MASTER_NUM_MAX) {
+		sprintf(tmpC, "BLOCK%d", mstNum);
+		res = getJsonValue(configData, &voidData, TYPE_INT64, tmpC);
+		if (!res) {
+			blockQid[mstNum] = *(int64_t*)voidData;
+			free(voidData);
+			voidData = NULL;
+		} else {
+			fprintf(stderr, "Failed to get BLOCK%d. Code: %ld\n", mstNum, *(int64_t*)voidData);
 			break;
 		}
 		mstNum++;
