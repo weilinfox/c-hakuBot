@@ -1,7 +1,7 @@
 import requests
 import json
 
-def main (msgDict):
+def func (msgDict):
     helpMsg = '小白会试着从qq音乐搜索~'
     req = list(msgDict['raw_message'].split(' ', 1))
     ans = ''

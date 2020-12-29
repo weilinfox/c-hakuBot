@@ -404,7 +404,7 @@ def GETMSG(self):
                     ans += "\n" + s + " ==> " + bcMain(s)
     return ans
 
-def main (msgDict):
+def func (msgDict):
     self = list(msgDict['raw_message'].split())
     retn = GETMSG(self)
     return retn

@@ -33,7 +33,7 @@ def encodeMsg (msg):
     return 'GET ' + URL + 'search?keywords=' + msg + ' HTTP/1.0\r\n\r\n'
     
 
-def main (msgDict):
+def func (msgDict):
     helpMsg = '小白会试着从网易云搜索~'
     req = list(msgDict['raw_message'].split(' ', 1))
     ans = ''

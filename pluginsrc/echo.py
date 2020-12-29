@@ -1,6 +1,6 @@
 import random
 
-def main (msgDict):
+def func (msgDict):
     helpMsg = '''人类本质的一个实现～
 由于不可告人的原因，过长的字段会被截断，包含中括号和大括号的字段可能复读失败
 qaq'''

@@ -1,6 +1,6 @@
 import requests
 
-def main (msgDict):
+def func (msgDict):
     helpMsg = '狸的一个访问wttr.in的小玩意'
     req = list(msgDict['raw_message'].split())
     for i in range(0, len(req)):

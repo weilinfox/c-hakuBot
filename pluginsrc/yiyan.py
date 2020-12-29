@@ -1,7 +1,7 @@
 import requests
 import json
 
-def main (msgDict):
+def func (msgDict):
     helpMsg = '传入参数，小白会搜索以下五个类别哦~\na 动画, b 漫画,\nc 文学, d 哲学\ne 诗词'
     req = list(msgDict['raw_message'].split(' ', 1))
     ans = ''
