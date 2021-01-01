@@ -13,7 +13,7 @@ int64_t masterId[MASTER_NUM_MAX];		/*id of administrators*/
 int64_t blockId[MASTER_NUM_MAX];		/*id of blocklist*/
 int masterNum = 0;
 int blockNum = 0;
-char hakuVersion[] = "由狸赋予的初代版本号 wlf 2020-12-29";
+char hakuVersion[] = "由狸赋予的版本号0.0.2 weilinfox 2021-1-1";
 
 size_t strToInt (const char* msg)
 {
@@ -32,7 +32,9 @@ int haveSubstr (const char* str, const char* substr)
 	size_t substrLen = strlen(substr);
 	size_t i, j;
 	int flag = 0;
+#ifdef DEBUG_HAKUMIND
 	fprintf(stdout, "strLen %ld, substrLen %ld\n", strLen, substrLen);
+#endif
 	if (strLen < substrLen) return 0;
 	for (i = 0; !flag && i <= strLen - substrLen; i++) {
 		for (j = 0; i + j < strLen && j < substrLen; j++) {
@@ -42,7 +44,9 @@ int haveSubstr (const char* str, const char* substr)
 		if (j == substrLen)
 			flag = 1;
 	}
+#ifdef DEBUG_HAKUMIND
 	fprintf(stdout, "Find finished\n");
+#endif
 
 	return flag;
 }
@@ -79,7 +83,9 @@ int haku_master_attach(int64_t id)
 		return OUT_OF_RANGE_ERROR;
 	else
 		masterId[masterNum++] = id;
+#ifdef DEBUG_HAKUMIND
 	fprintf(stdout, "Attached master id: %ld\n", masterId[masterNum-1]);
+#endif
 
 	return 0;
 }
@@ -90,7 +96,9 @@ int haku_block_attach(int64_t id)
 		return OUT_OF_RANGE_ERROR;
 	else
 		blockId[blockNum++] = id;
+#ifdef DEBUG_HAKUMIND
 	fprintf(stdout, "Attached block id: %ld\n", blockId[blockNum-1]);
+#endif
 
 	return 0;
 }
@@ -114,7 +122,6 @@ char* catch_inside_command (const event_t *newEvent)
 	if (haveSubstr(newEvent->eventMessage, "hakuzousu") || \
 			haveSubstr(newEvent->eventMessage, "白蔵主") || \
 			haveSubstr(newEvent->eventMessage, "白藏主")) {
-		fprintf(stdout, "Get substr hakuzousu.\n");
 		if (!isMaster) {
 			replyMsg = (char*)malloc(sizeof(char)*32);
 			snprintf(replyMsg, 31, "何人竟敢直呼吾名？");
@@ -139,7 +146,6 @@ char* catch_inside_command (const event_t *newEvent)
 		}
 	} else if (haveSubstr(newEvent->eventMessage, "haku") || \
 			haveSubstr(newEvent->eventMessage, "小白")) {
-		fprintf(stdout, "Get substr haku.\n");
 		if (haveSubstr(newEvent->eventMessage, "日志")) {
 			replyMsg = (char*)malloc(sizeof(char)*64);
 			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat*60/((int64_t)(timeNow-hakuSelf.wakeTime))+1, (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
@@ -277,6 +283,7 @@ new_event_t* httpMsgToEvent (const char* msg)
 		}
 	}
 
+#ifdef DEBUG_HAKUMIND
 	fprintf(stdout, "\n\nParse result START:\n");
 	fprintf(stdout, "Method: %s\nPath: %s\nProtocol: %s\n", httpData.httpMethod, httpData.httpPath, httpData.httpProtocol);
 	for (i = 0; i < httpData.headerNum; i++) {
@@ -289,6 +296,7 @@ new_event_t* httpMsgToEvent (const char* msg)
 		fprintf(stdout, "%s\n", httpData.httpData);
 	}
 	fprintf(stdout, "Parse result END.\n\n");
+#endif
 
 	/*generate new go-cqhttp event*/
 	void *jsonData = NULL;
@@ -421,24 +429,31 @@ char* parse_plugin_command(event_t *newEvent)
 	if (i < MAX_SOFILE_NAME_LEN - 2) {
 		/* .so plugins */
 		command[i-1] = '\0';
+#ifdef DEBUG_HAKUMIND
 		fprintf(stdout, "Get plugin name: %s\n", command);
-		so_file_t *pluginp = open_so_file(command);
-		if (pluginp) {
+#endif
+		so_name_tree_t *pluginp = open_plugin(command);
+		if (pluginp > 0) {
+#ifdef DEBUG_HAKUMIND
 			fprintf(stdout, "Caught this plugin.\n");
-			respstr = (pluginp->func)(newEvent);
-		} else {
-			/* python plugins */
-			PyObject *pyPlugin = get_python_plugin(command);
-			if (pyPlugin) {
-				fprintf(stdout, "Caught python plugin.\n");
-				respstr = run_python_plugin(pyPlugin, newEvent);
-				Py_CLEAR(pyPlugin);
+#endif
+			if (pluginp->soFile) {
+				/* so plugins */
+				respstr = (pluginp->soFile->func)(newEvent);
+			} else if (pluginp->pyModule) {
+				/* python plugins */
+				respstr = run_python_func(pluginp->pyModule->pyFunc, newEvent);
+			} else {
+				/* error */
+				fprintf(stderr, "open_plugin returned a invalid pointer!!!!\n");
 			}
 		}
 	}
 	free(command);
 
+#ifdef DEBUG_HAKUMIND
 	fprintf(stdout, "return %p\n", respstr);
+#endif
 
 	return respstr;
 }
@@ -453,6 +468,7 @@ int new_thread(const char *msg)
 	if (res) {
 		fprintf(stderr, "error Code %ld\n", newEvent->error);
 	} else {
+#ifdef DEBUG_HAKUMIND
 		fprintf(stdout, "No Error.\n");
 		fprintf(stdout, "eventType: %s\n", newEvent->eventType);
 		fprintf(stdout, "eventName: %s\n", newEvent->eventName);
@@ -461,6 +477,8 @@ int new_thread(const char *msg)
 		fprintf(stdout, "eventInterval: %lld\n", (long long)newEvent->eventInterval);
 		fprintf(stdout, "groupId: %ld, userId %ld, selfId %ld\n", newEvent->groupId, newEvent->userId, newEvent->selfId);
 		fprintf(stdout, "return Code %ld\n", newEvent->error);
+#endif
+		fprintf(stdout, "Get new message: %s\nGroupId %lld; UserId %lld\n", newEvent->eventMessage, newEvent->groupId, newEvent->userId);
 
 		if (!strcmp(newEvent->eventType, "QUIT")) {
 			free(newEvent);

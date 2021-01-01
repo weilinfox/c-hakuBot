@@ -199,7 +199,7 @@ int main()
 	set_server_data(url, port, backlog);
 	set_api_data(url, sendport, token);
 	init_so_file_tree();
-	init_python_plugin();
+	//init_python_plugin();
 	awake_haku(comIndex);	/*awaken haku~*/
 	for (i = 0; i < mstNum; i++) {
 		res = haku_master_attach(masterQid[i]);

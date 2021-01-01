@@ -75,7 +75,9 @@ CURLcode getData (resp_data *respData, const char *url, int num, ...)
 	va_end(arg_ptr);
 	urlFinal[length] = '\0';
 
+#ifdef DEBUG
 	fprintf(stdout, "URL is: %s\n", urlFinal);
+#endif
 
 	easyConnect = curl_easy_init();
 	if (easyConnect) {

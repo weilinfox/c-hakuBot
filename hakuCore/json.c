@@ -30,13 +30,17 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 			return MULTIPLE_ERRORS;
 		}
 	}
+#ifdef DEBUG_JSON
 	fprintf(stdout, "start getJsonValue\n");
+#endif
 	JsonParser *jsonParser = json_parser_new();
 	GError *error = NULL;
 	json_parser_load_from_data(jsonParser, data, strlen(data), &error);
 
 	if (error) {
+#ifdef DEBUG_JSON
 		fprintf(stderr, "Json parse error.\n");
+#endif
 		if (result == NULL) {
 			g_error_free(error);
 			g_object_unref(jsonParser);
@@ -58,13 +62,17 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 	} else {
 		free(error);
 	}
+#ifdef DEBUG_JSON
 	fprintf(stdout, "Json parse finished\n");
+#endif
 	
 	/*search and get data*/
 	JsonNode *rootNode = json_parser_get_root(jsonParser);
 	JsonObject *rootObject = json_node_get_object(rootNode);
 	if (json_object_has_member(rootObject, member)) {
+#ifdef DEBUG_JSON
 		fprintf(stdout, "Json parse: find member\n");
+#endif
 		JsonNode *thisNode = json_object_get_member(rootObject, member);
 		GType thisType = json_node_get_value_type(thisNode);
 		//json_object_foreach_member(memberObject, getTextCb, text);
@@ -91,6 +99,7 @@ int getJsonValue(const char *data, void **result, int type, const char *member)
 	} else {
 		g_object_unref(jsonParser);
 		fprintf(stderr, "Json parse: no such member\n");
+
 		if (result == NULL)
 			return NO_SUCH_MEMBER_ERROR;
 		if (type == TYPE_STRING) {

@@ -1,6 +1,8 @@
 #ifndef ERRORMSG_H
 #define ERRORMSG_H
 
+//#define DEBUG
+
 /*General*/
 #define NO_ERROR 0
 #define WARNING -20

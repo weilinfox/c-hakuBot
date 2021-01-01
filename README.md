@@ -2,15 +2,26 @@
 A new version of hakuBot writen by C.
 
 ## DEP
-+ libcurl
-+ libuv
-+ libjson-glib
 
-fedora:
+### ubuntu
+
++ libcurl-dev
++ libuv-dev
++ libjson-glib-dev
++ python3-dev
+
+### fedora
+
 + libcurl-devel
 + libuv-devel
 + json-glib-devel
++ python3-devel
 
+## BUILD DEP
+
++ make
++ pkg-config
++ gcc
 
 ## API
 
@@ -63,6 +74,7 @@ typedef struct {
 void awake_haku(void);
 void haku_sleep(void);
 int haku_master_attach(int64_t id);
+int haku_block_attach(int64_t id);
 /*start a new parsing thread*/
 /*httpMsg is origin http tcp data*/
 /*return code : 0 - no error, QUIT_FLAG - quit server*/
@@ -115,8 +127,11 @@ typedef struct so_file_tree {
 
 ```c
 int init_so_file_tree (void);
+int init_python_plugin (void);
 so_file_t* open_so_file (const char *name);
 void free_so_file_tree (void);
+PyObject* get_python_plugin (char *name);
+char* run_python_plugin (PyObject *pyPlugin, event_t *newEvent);
 ```
 
 ### api.h
@@ -155,6 +170,26 @@ int get_group_member_list(int64_t group_id, char* returnData[]);
 
 ### errorMsg.h
 Set error flags
+
+## 插件
+
+插件中应该至少包含三个函数，分别用于初始化插件，实现插件功能和卸载插件。鉴于动态链接库和python模块的实现，插件被设计成只载入一次和只在退出时卸载，在插件中对数据进行短暂的保存成为可能。
+
++ init\_func()
+
+对插件进行初始化，包括一些插件中的全局变量以及指针的初始化。只在初次载入时调用一次。
+
++ func(event\_t *)
+
+插件的主体功能，每次调用插件都将调用这个函数。
+
++ end\_func()
+
+释放插件占用的资源。
+
++ python
+
+python的设计告诉我们不需要为他们设计专门的方法来初始化之，因此只有一个 ``func()`` 。它和之前用python编写的小白获得的参数格式是一致的，不同的只是只能同过返回一个str来实现消息的返回。因此很大程度上它是向下兼容的。
 
 ## reference
 

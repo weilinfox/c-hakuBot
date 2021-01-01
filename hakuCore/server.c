@@ -79,7 +79,9 @@ void on_new_connection(uv_stream_t *server, int status)
 
 	if (uv_accept(server, (uv_stream_t*)client) == 0) {
 		int res = uv_read_start((uv_stream_t*)client, new_buffer, on_reply);
+#ifdef DEBUG_SERVER
 		fprintf(stdout, "Connection accepted with a read code: %d\n", res);
+#endif
 	} else {
 		fprintf(stderr, "Connection accept Error.\n");
 		uv_close((uv_handle_t*)client, on_close);
@@ -88,7 +90,9 @@ void on_new_connection(uv_stream_t *server, int status)
 
 int set_server_data(const char* addrc, int p, int b)
 {
+#ifdef DEBUG_SERVER
 	fprintf(stdout, "Seting server data.\n");
+#endif
 	if (serverAddr)
 		free(serverAddr);
 	serverAddr = (char*)malloc(sizeof(char)*(strlen(addrc)+2));
@@ -144,7 +148,9 @@ int new_server()
 		fprintf(stderr, "Listen Error on port %d: %s\n", serverPort, uv_strerror(res));
 	} else {
 		res = uv_run(loop, UV_RUN_DEFAULT);
+#ifdef DEBUG_SERVER
 		fprintf(stdout, "UV_RUN returned code: %d\n", res);
+#endif
 	}
 
 	quit_server();
