@@ -59,11 +59,15 @@ void on_reply(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
 		if (nread != UV_EOF) {
 			fprintf(stderr, "Read Error: %s\n", uv_err_name(nread));
 		} else {
+#ifdef DEBUG_SERVER
 			fprintf(stdout, "Read End Nomally.\n");
+#endif
 		}
 		uv_close((uv_handle_t*)client, on_close);
 	}
+#ifdef DEBUG_SERVER
 	fprintf(stdout, "Free buf->base here\n");
+#endif
 	free(buf->base);
 }
 

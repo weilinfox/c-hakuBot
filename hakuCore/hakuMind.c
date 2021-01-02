@@ -495,7 +495,6 @@ int new_thread(const char *msg)
 		fprintf(stdout, "groupId: %ld, userId %ld, selfId %ld\n", newEvent->groupId, newEvent->userId, newEvent->selfId);
 		fprintf(stdout, "return Code %ld\n", newEvent->error);
 #endif
-		fprintf(stdout, "Get new message: %s\nGroupId %lld; UserId %lld\n", newEvent->eventMessage, newEvent->groupId, newEvent->userId);
 
 		if (!strcmp(newEvent->eventType, "QUIT")) {
 			free(newEvent);
@@ -503,6 +502,8 @@ int new_thread(const char *msg)
 		}
 
 		if (!strcmp(newEvent->eventType, "message")) {
+			fprintf(stdout, "Get new message: %s\nGroupId %lld; UserId %lld\n", newEvent->eventMessage, newEvent->groupId, newEvent->userId);
+
 			if (hakuSelf.selfId == 0)
 				hakuSelf.selfId = newEvent->selfId;
 
