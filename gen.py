@@ -76,18 +76,20 @@ except Exception as e:
 rtCode = subprocess.call('./hakuBot', shell = True, cwd = rootPath + '/c-hakuBot/')
 while True:
     if rtCode == sleepCode:
-        print('gen will wake up haku in ', sleepDuration, ' seconds.')
+        print('\ngen will wake up haku in ', sleepDuration, ' seconds.\n')
         time.sleep(sleepDuration)
     elif rtCode == quitCode:
-        print('Quit gen.')
+        print('\nQuit gen.\n')
         break
     elif rtCode == updateCode:
+        print('\nStart update process.')
         gitPull = subprocess.getoutput('cd ' + rootPath + '/c-hakuBot/ && git pull')
         makeInstall = subprocess.getoutput('cd ' + rootPath + ' && make && make install && make clean')
+        print('Finished. Wake haku up now.\n')
         #print(gitPull)
         #print(makeInstall)
     else:
-        print('Unknown return code. Try to waken haku.', rtCode)
+        print('\nUnknown return code. Try to waken haku.\n', rtCode)
     rtCode = subprocess.call('./hakuBot', shell = True, cwd = rootPath + '/c-hakuBot/')
 
 
