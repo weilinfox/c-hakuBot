@@ -9,10 +9,12 @@ hakuLive hakuSelf;
 time_list_node_t *messageTimeListHead = NULL;	/*List to record msg time*/
 time_list_node_t *messageTimeListTail = NULL;
 int64_t messageNumPerSecond = 0;		/*message num per second*/
+int64_t messageNumPerSecondLog = -1;		/*for log message*/
 int64_t masterId[MASTER_NUM_MAX];		/*id of administrators*/
 int64_t blockId[MASTER_NUM_MAX];		/*id of blocklist*/
 int masterNum = 0;
 int blockNum = 0;
+char *QUIT_MSG_FILE = "quit.txt";
 extern int quitFlag;
 char hakuVersion[] = "由狸赋予的版本号0.0.3 weilinfox 2021-1-2";
 
@@ -59,6 +61,11 @@ int haveSubstr (const char* str, const char* substr)
 
 void awake_haku (char index)
 {
+	FILE *quitMsgFile = fopen(QUIT_MSG_FILE, "r");
+	char *quitMsg = (char*)malloc(sizeof(char) * 4096);
+	char *msgPoint = NULL;
+	new_event_t *quitEvent = NULL;
+
 	hakuSelf.selfId = hakuSelf.heartBeat = 0;
 	hakuSelf.lastHeartBeat = 0;
 	hakuSelf.wakeTime = time(NULL);
@@ -70,6 +77,24 @@ void awake_haku (char index)
 	messageNumPerSecond = 0;
 
 	fprintf(stdout, "Haku wake up with index: %c\n", hakuSelf.index);
+
+	if (quitMsgFile) {
+		fread(quitMsg, sizeof(char), 4095, quitMsgFile);
+		msgPoint = strchr(quitMsg, '\n');
+		//fprintf(stdout, "%s\n%s\n", quitMsg, msgPoint);
+		if (msgPoint) {
+			*msgPoint = '\0';
+			//fprintf(stdout, "\t%s%s\n", quitMsg, msgPoint+2);
+			quitEvent = httpMsgToEvent(msgPoint + 2);
+			if (!quitEvent->error) {
+				if (!strcmp(quitMsg, "UPDATE")) reply_message(quitEvent, "小白升级完成~");
+				else if (!strcmp(quitMsg, "SLEEP")) reply_message(quitEvent, "小白已经从睡梦中醒来~");
+			}
+		}
+		fclose(quitMsgFile);
+	}
+	free(quitMsg);
+	free(quitEvent);
 }
 
 void haku_sleep()
@@ -521,12 +546,24 @@ int new_thread(const char *msg)
 				fprintf(stdout, "Get reply message.\n");
 				reply_message(newEvent, replyMsg);
 			} else if (replyMsg) {
+				FILE *quitMsgFile = fopen(QUIT_MSG_FILE, "w");
+				char *quitMsg = strstr(msg, "\r\n\r\n");
 				free(replyMsg);
 				switch (quitFlag) {
-					case GEN_QUIT_FLAG: reply_message(newEvent, "小白将和元一同退出。"); break;
-					case GEN_UPDATE_FLAG: reply_message(newEvent, "小白将请求元升级小白。"); break;
-					case GEN_SLEEP_FLAG: reply_message(newEvent, "小白去休息了，狸也要早早休息哦~"); break;
+					case GEN_QUIT_FLAG:
+						fprintf(quitMsgFile, "QUIT\n\n%s", msg);
+						reply_message(newEvent, "小白将和元一同退出。");
+						break;
+					case GEN_UPDATE_FLAG:
+						fprintf(quitMsgFile, "UPDATE\n\n%s", msg);
+						reply_message(newEvent, "小白将请求元升级小白。");
+						break;
+					case GEN_SLEEP_FLAG:
+						fprintf(quitMsgFile, "SLEEP\n\n%s", msg);
+						reply_message(newEvent, "小白去休息了，狸也要早早休息哦~");
+						break;
 				}
+				fclose(quitMsgFile);
 				return QUIT_FLAG;
 			}
 			free(replyMsg);
@@ -545,8 +582,10 @@ int new_thread(const char *msg)
 				if (hakuSelf.selfId == 0)
 					hakuSelf.selfId = newEvent->selfId;
 
-				if (messageNumPerSecond)
+				if (messageNumPerSecond != messageNumPerSecondLog) {
+					messageNumPerSecondLog = messageNumPerSecond;
 					fprintf(stdout, "messageNumPerSecond: %ld\n", messageNumPerSecond);
+				}
 
 				/*remove timeout message*/
 				time_list_node_t *listHead = messageTimeListHead->next;

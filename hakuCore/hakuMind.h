@@ -45,6 +45,7 @@ void awake_haku(char index);
 void haku_sleep(void);
 int haku_master_attach(int64_t id);
 int haku_block_attach(int64_t id);
+new_event_t *httpMsgToEvent (const char* msg);
 void set_quit_flag (int flag);
 int new_thread(const char *httpMsg);
 

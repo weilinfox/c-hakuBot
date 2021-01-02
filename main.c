@@ -201,7 +201,6 @@ int main()
 	set_api_data(url, sendport, token);
 	init_so_file_tree();
 	//init_python_plugin();
-	awake_haku(comIndex);	/*awaken haku~*/
 	for (i = 0; i < mstNum; i++) {
 		res = haku_master_attach(masterQid[i]);
 		if (res) break;
@@ -210,6 +209,7 @@ int main()
 		res = haku_block_attach(blockQid[i]);
 		if (res) break;
 	}
+	awake_haku(comIndex);	/*awaken haku~*/
 
 	res = new_server();
 
