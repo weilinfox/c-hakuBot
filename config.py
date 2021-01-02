@@ -1,0 +1,3 @@
+masterQid = []
+
+defaultJson = ''

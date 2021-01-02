@@ -13,7 +13,13 @@ int64_t masterId[MASTER_NUM_MAX];		/*id of administrators*/
 int64_t blockId[MASTER_NUM_MAX];		/*id of blocklist*/
 int masterNum = 0;
 int blockNum = 0;
+extern int quitFlag;
 char hakuVersion[] = "由狸赋予的版本号0.0.2 weilinfox 2021-1-1";
+
+void set_quit_flag (int flag)
+{
+	quitFlag = flag;
+}
 
 size_t strToInt (const char* msg)
 {
@@ -134,6 +140,17 @@ char* catch_inside_command (const event_t *newEvent)
 		} else if (haveSubstr(newEvent->eventMessage, "休息")) {
 			replyMsg = (char*)malloc(sizeof(char)*32);
 			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
+			set_quit_flag(GEN_SLEEP_FLAG);
+			return replyMsg;
+		} else if (haveSubstr(newEvent->eventMessage, "退出")) {
+			replyMsg = (char*)malloc(sizeof(char)*32);
+			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
+			set_quit_flag(GEN_QUIT_FLAG);
+			return replyMsg;
+		} else if (haveSubstr(newEvent->eventMessage, "升级")) {
+			replyMsg = (char*)malloc(sizeof(char)*32);
+			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
+			set_quit_flag(GEN_UPDATE_FLAG);
 			return replyMsg;
 		} else if (haveSubstr(newEvent->eventMessage, "版本") || haveSubstr(newEvent->eventMessage, "version")) {
 			replyMsg = (char*)malloc(sizeof(char)*128);

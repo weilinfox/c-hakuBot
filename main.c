@@ -15,6 +15,7 @@ int64_t masterQid[MASTER_NUM_MAX];
 int64_t blockQid[MASTER_NUM_MAX];
 int mstNum;
 int blkNum;
+int quitFlag = 0;
 
 int data_preload(void)
 {
@@ -221,6 +222,6 @@ int main()
 
 	global_cleanup();
 
-	return 0;
+	return quitFlag;
 }
 
