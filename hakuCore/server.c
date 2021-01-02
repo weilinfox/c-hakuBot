@@ -44,7 +44,9 @@ void on_reply(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
 		if (res) {
 			fprintf(stderr, "Connection write Error with code: %d\n", res);
 		}
+#ifdef DEBUG_SERVER
 		fprintf(stdout, "Call new_thread here\n");
+#endif
 		res = new_thread(buf->base);
 		if (res) {
 			if (res == QUIT_FLAG) {

@@ -14,7 +14,7 @@ int64_t blockId[MASTER_NUM_MAX];		/*id of blocklist*/
 int masterNum = 0;
 int blockNum = 0;
 extern int quitFlag;
-char hakuVersion[] = "由狸赋予的版本号0.0.2 weilinfox 2021-1-1";
+char hakuVersion[] = "由狸赋予的版本号0.0.3 weilinfox 2021-1-2";
 
 void set_quit_flag (int flag)
 {
@@ -502,6 +502,7 @@ int new_thread(const char *msg)
 		}
 
 		if (!strcmp(newEvent->eventType, "message")) {
+			fprintf(stdout, "Raw_message: %s\n", msg);
 			fprintf(stdout, "Get new message: %s\nGroupId %lld; UserId %lld\n", newEvent->eventMessage, newEvent->groupId, newEvent->userId);
 
 			if (hakuSelf.selfId == 0)
@@ -544,13 +545,15 @@ int new_thread(const char *msg)
 				if (hakuSelf.selfId == 0)
 					hakuSelf.selfId = newEvent->selfId;
 
-				fprintf(stdout, "messageNumPerSecond: %ld\n", messageNumPerSecond);
+				if (messageNumPerSecond)
+					fprintf(stdout, "messageNumPerSecond: %ld\n", messageNumPerSecond);
 
 				/*remove timeout message*/
 				time_list_node_t *listHead = messageTimeListHead->next;
 				time_list_node_t *listNode = NULL;
-
-				fprintf(stderr, "Delta time: %d\n", listHead?(int)(timeNow-listHead->time):0);
+#ifdef DEBUG_HAKUMIND
+				fprintf(stdout, "Delta time: %d\n", listHead?(int)(timeNow-listHead->time):0);
+#endif
 				while (listHead && timeNow - listHead->time >= 60) {
 					listNode = listHead;
 					listHead = listHead->next;
