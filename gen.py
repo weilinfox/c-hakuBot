@@ -70,7 +70,7 @@ except Exception as e:
     print(e)
     exit()
 
-rtCode = subprocess.call('cd ' + rootPath + '/c-hakuBot/ && ./hakuBot')
+rtCode = subprocess.call('./hakuBot', shell = True, cwd = rootPath + '/c-hakuBot/')
 while True:
     if rtCode == sleepCode:
         print('gen will wake up haku in ', sleepDuration, ' seconds.')
@@ -85,7 +85,7 @@ while True:
         print(makeInstall)
     else:
         print('Unknown return code. Try to waken haku.', rtCode)
-    rtCode = subprocess.call('cd ' + rootPath + '/c-hakuBot/ && ./hakuBot')
+    rtCode = subprocess.call('./hakuBot', shell = True, cwd = rootPath + '/c-hakuBot/')
 
 
 
