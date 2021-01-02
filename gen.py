@@ -70,7 +70,7 @@ except Exception as e:
     print(e)
     exit()
 
-rtCode = subprocess.call('cd ' + rootPath + '/c-hakuBot/ && ./hakuBOt')
+rtCode = subprocess.call('cd ' + rootPath + '/c-hakuBot/ && ./hakuBot')
 while True:
     if rtCode == sleepCode:
         print('gen will wake up haku in ', sleepDuration, ' seconds.')
