@@ -4,8 +4,8 @@ import json
 import time
 from config import masterQid, defaultJson
 
-updataCode = 1001
-sleepCode = 1009
+updateCode = 110
+sleepCode = 109
 quitCode = 0
 sleepDuration = 3600 * 6
 
@@ -81,8 +81,10 @@ while True:
     elif rtCode == updateCode:
         gitPull = subprocess.getoutput('cd ' + rootPath + '/c-hakuBot/ && git pull')
         makeInstall = subprocess.getoutput('cd ' + rootPath + 'c-hakuBot/ && make && make install && make clean')
+        print(gitPull)
+        print(makeInstall)
     else:
-        print('Unknown return code. Try to waken haku.')
+        print('Unknown return code. Try to waken haku.', rtCode)
     rtCode = subprocess.call(rootPath + '/c-hakuBot/hakuBot')
 
 

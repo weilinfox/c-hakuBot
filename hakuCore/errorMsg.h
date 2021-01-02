@@ -4,8 +4,8 @@
 //#define DEBUG
 
 /*gen code*/
-#define GEN_UPDATE_FLAG 1010
-#define GEN_SLEEP_FLAG 1009
+#define GEN_UPDATE_FLAG 110
+#define GEN_SLEEP_FLAG 109
 #define GEN_QUIT_FLAG 0
 
 /*General*/
