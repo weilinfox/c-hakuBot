@@ -16,6 +16,10 @@ cqhttpSendPort = 0
 cqhttpToken = ''
 if not os.path.exists(rootPath + '/c-hakuBot/config.json'):
     if not os.path.exists(rootPath + '/c-hakuBot/hakuBot'):
+        print('Build haku~')
+        outPut = subprocess.getoutput('cd ' + rootPath + ' && make && make install && make clean')
+        print(outPut)
+    if not os.path.exists(rootPath + '/c-hakuBot/hakuBot'):
         print('Where is haku?')
         exit()
     else:
@@ -26,9 +30,8 @@ if not os.path.exists(rootPath + '/c-hakuBot/config.json'):
             configFlag = 0
         else:
             try:
+                print(defaultJson)
                 configDict = json.loads(defaultJson)
-                cqhttpAddr = configDict['URL']
-                configDict = json.loads(jsonData)
                 cqhttpAddr = configDict['URL']
                 cqhttpSendPort = configDict['SEND_PORT']
                 cqhttpPort = configDict['PORT']
@@ -42,11 +45,11 @@ if not os.path.exists(rootPath + '/c-hakuBot/config.json'):
                 configFlag = 0
         if not configFlag:
             print('You should edit haku\'s config file manually.')
-            outPut = subprocess.getoutput(rootPath + '/c-hakuBot/hakuBot')
-            #print(outPut)
+            outPut = subprocess.getoutput('cd ' + rootPath + '/c-hakuBot && ./hakuBot')
+            print(outPut)
             exit()
         else:
-            jsonFile = open(rootPath + '/c-hakuBot/config.json')
+            jsonFile = open(rootPath + '/c-hakuBot/config.json', 'w')
             jsonFile.write(defaultJson)
             jsonFile.close();
 
@@ -81,8 +84,8 @@ while True:
     elif rtCode == updateCode:
         gitPull = subprocess.getoutput('cd ' + rootPath + '/c-hakuBot/ && git pull')
         makeInstall = subprocess.getoutput('cd ' + rootPath + ' && make && make install && make clean')
-        print(gitPull)
-        print(makeInstall)
+        #print(gitPull)
+        #print(makeInstall)
     else:
         print('Unknown return code. Try to waken haku.', rtCode)
     rtCode = subprocess.call(rootPath + '/c-hakuBot/hakuBot')
