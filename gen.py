@@ -80,7 +80,7 @@ while True:
         break
     elif rtCode == updateCode:
         gitPull = subprocess.getoutput('cd ' + rootPath + '/c-hakuBot/ && git pull')
-        makeInstall = subprocess.getoutput('cd ' + rootPath + 'c-hakuBot/ && make && make install && make clean')
+        makeInstall = subprocess.getoutput('cd ' + rootPath + '/c-hakuBot/ && make && make install && make clean')
         print(gitPull)
         print(makeInstall)
     else:
