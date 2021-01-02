@@ -520,6 +520,11 @@ int new_thread(const char *msg)
 				reply_message(newEvent, replyMsg);
 			} else if (replyMsg) {
 				free(replyMsg);
+				switch (quitFlag) {
+					case GEN_QUIT_FLAG: reply_message(newEvent, "小白将和元一同退出。"); break;
+					case GEN_UPDATE_FLAG: reply_message(newEvent, "小白将请求元升级小白。"); break;
+					case GEN_SLEEP_FLAG: reply_message(newEvent, "小白去休息了，狸也要早早休息哦~"); break;
+				}
 				return QUIT_FLAG;
 			}
 			free(replyMsg);
