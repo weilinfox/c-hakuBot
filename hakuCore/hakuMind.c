@@ -162,7 +162,7 @@ char* catch_inside_command (const event_t *newEvent)
 			replyMsg = (char*)malloc(sizeof(char)*64);
 			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat*60/((int64_t)(timeNow-hakuSelf.wakeTime))+1, (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
 			return replyMsg;
-		} else if (haveSubstr(newEvent->eventMessage, "睡觉") || haveSubstr(newEvent->eventMessage, "休息")) {
+		} else if (haveSubstr(newEvent->eventMessage, "休息")) {
 			replyMsg = (char*)malloc(sizeof(char)*32);
 			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
 			set_quit_flag(GEN_SLEEP_FLAG);
@@ -192,7 +192,7 @@ char* catch_inside_command (const event_t *newEvent)
 			replyMsg = (char*)malloc(sizeof(char)*64);
 			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat*60/((int64_t)(timeNow-hakuSelf.wakeTime))+1, (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
 			return replyMsg;
-		} else if (haveSubstr(newEvent->eventMessage, "睡觉") || haveSubstr(newEvent->eventMessage, "休息")) {
+		} else if (haveSubstr(newEvent->eventMessage, "休息")) {
 			replyMsg = (char*)malloc(sizeof(char)*80);
 			if (isMaster) snprintf(replyMsg, 79, "_QUIT__FLAG__BY__INUYASHA_");
 			else snprintf(replyMsg, 79, "狸并没有赋予汝此权限，回应你就是小白最大的耐心。");
