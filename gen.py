@@ -123,7 +123,7 @@ while True:
                 
         gitPull = subprocess.getoutput('cd ' + rootPath + '/c-hakuBot/ && git pull')
         if sendMsgFlag:
-            sendMsgParms['message'] = 'Git returned message:\n' + gitPull;
+            sendMsgParms['message'] = 'Git message:\n' + gitPull;
             resp = requests.get(url=sendMsgUrl, params=sendMsgParms)
             print(resp)
         makeInstall = subprocess.getoutput('cd ' + rootPath + ' && make')
