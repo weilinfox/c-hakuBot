@@ -194,8 +194,10 @@ char* catch_inside_command (const event_t *newEvent)
 			return replyMsg;
 		} else if (haveSubstr(newEvent->eventMessage, "休息")) {
 			replyMsg = (char*)malloc(sizeof(char)*80);
-			if (isMaster) snprintf(replyMsg, 79, "_QUIT__FLAG__BY__INUYASHA_");
-			else snprintf(replyMsg, 79, "狸并没有赋予汝此权限，回应你就是小白最大的耐心。");
+			if (isMaster) {
+				snprintf(replyMsg, 79, "_QUIT__FLAG__BY__INUYASHA_");
+				set_quit_flag(GEN_SLEEP_FLAG);
+			} else snprintf(replyMsg, 79, "狸并没有赋予汝此权限，回应你就是小白最大的耐心。");
 			return replyMsg;
 		} else if (haveSubstr(newEvent->eventMessage, "退出")) {
 			replyMsg = (char*)malloc(sizeof(char)*80);
