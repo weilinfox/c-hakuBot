@@ -36,7 +36,7 @@ size_t strToInt (const char* msg)
 
 int haveSubstr (const char* str, const char* substr)
 {
-	size_t strLen = strlen(str);
+/*	size_t strLen = strlen(str);
 	size_t substrLen = strlen(substr);
 	size_t i, j;
 	int flag = 0;
@@ -55,8 +55,8 @@ int haveSubstr (const char* str, const char* substr)
 #ifdef DEBUG_HAKUMIND
 	fprintf(stdout, "Find finished\n");
 #endif
-
-	return flag;
+*/
+	return strstr(str, substr) != NULL;
 }
 
 void awake_haku (char index)
@@ -162,7 +162,7 @@ char* catch_inside_command (const event_t *newEvent)
 			replyMsg = (char*)malloc(sizeof(char)*64);
 			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat*60/((int64_t)(timeNow-hakuSelf.wakeTime))+1, (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
 			return replyMsg;
-		} else if (haveSubstr(newEvent->eventMessage, "休息")) {
+		} else if (haveSubstr(newEvent->eventMessage, "睡觉") || haveSubstr(newEvent->eventMessage, "休息")) {
 			replyMsg = (char*)malloc(sizeof(char)*32);
 			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
 			set_quit_flag(GEN_SLEEP_FLAG);
@@ -192,14 +192,28 @@ char* catch_inside_command (const event_t *newEvent)
 			replyMsg = (char*)malloc(sizeof(char)*64);
 			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat*60/((int64_t)(timeNow-hakuSelf.wakeTime))+1, (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
 			return replyMsg;
-		} else if (isMaster && haveSubstr(newEvent->eventMessage, "休息")) {
-			replyMsg = (char*)malloc(sizeof(char)*32);
-			snprintf(replyMsg, 31, "_QUIT__FLAG__BY__INUYASHA_");
+		} else if (haveSubstr(newEvent->eventMessage, "睡觉") || haveSubstr(newEvent->eventMessage, "休息")) {
+			replyMsg = (char*)malloc(sizeof(char)*80);
+			if (isMaster) snprintf(replyMsg, 79, "_QUIT__FLAG__BY__INUYASHA_");
+			else snprintf(replyMsg, 79, "狸并没有赋予汝此权限，回应你就是小白最大的耐心。");
 			return replyMsg;
-		} else if (haveSubstr(newEvent->eventMessage, "版本") || haveSubstr(newEvent->eventMessage, "version")) {
+		} else if (haveSubstr(newEvent->eventMessage, "退出")) {
+			replyMsg = (char*)malloc(sizeof(char)*80);
+			if (isMaster) {
+				snprintf(replyMsg, 79, "_QUIT__FLAG__BY__INUYASHA_");
+				set_quit_flag(GEN_QUIT_FLAG);
+			} else snprintf(replyMsg, 79, "狸并没有赋予汝此权限，回应你就是小白最大的耐心。");
+			return replyMsg;
+		} else if (haveSubstr(newEvent->eventMessage, "升级")) {
+			replyMsg = (char*)malloc(sizeof(char)*80);
+			if (isMaster) {
+				snprintf(replyMsg, 79, "_QUIT__FLAG__BY__INUYASHA_");
+				set_quit_flag(GEN_UPDATE_FLAG);
+			} else snprintf(replyMsg, 79, "狸并没有赋予汝此权限，回应你就是小白最大的耐心。");
+			return replyMsg;
+		} else if (isMaster && (haveSubstr(newEvent->eventMessage, "版本") || haveSubstr(newEvent->eventMessage, "version"))) {
 			replyMsg = (char*)malloc(sizeof(char)*128);
-			if (isMaster) snprintf(replyMsg, 127, "小白的内核信息如下:\n%s", hakuVersion);
-			else snprintf(replyMsg, 127, "狸并没有赋予汝此权限，回应你就是小白最大的耐心。");
+			snprintf(replyMsg, 127, "小白的内核信息如下:\n%s", hakuVersion);
 			return replyMsg;
 		} else {
 			replyMsg = (char*)malloc(sizeof(char)*32);
