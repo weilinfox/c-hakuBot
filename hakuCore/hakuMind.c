@@ -139,8 +139,16 @@ char* catch_inside_command (const event_t *newEvent)
 	char *replyMsg;
 	int i;
 	time_t timeNow = time(NULL);
-	int isMaster = 0;
-	
+	int isMaster = 0, isBlock = 0;
+
+	/*check block*/
+	for (i = 0; i < blockNum; i++) {
+		if (blockId[i] == newEvent->userId) {
+			isBlock = 1;
+			break;
+		}
+	}
+
 	/*check master*/
 	for (i = 0; i < masterNum; i++) {
 		if (masterId[i] == newEvent->userId) {
@@ -188,7 +196,11 @@ char* catch_inside_command (const event_t *newEvent)
 		}
 	} else if (haveSubstr(newEvent->eventMessage, "haku") || \
 			haveSubstr(newEvent->eventMessage, "小白")) {
-		if (haveSubstr(newEvent->eventMessage, "日志")) {
+		if (isBlock) {
+			replyMsg = (char*)malloc(sizeof(char)*64);
+			snprintf(replyMsg, 63, "虽然不知道是何种执念，这句话将被忽略。");
+			return replyMsg;
+		} else if (haveSubstr(newEvent->eventMessage, "日志")) {
 			replyMsg = (char*)malloc(sizeof(char)*64);
 			snprintf(replyMsg, 63, "流量: %ld\n心跳: %ld\n小白已经正常运行:\n%ld分%ld秒", messageNumPerSecond, (int64_t)hakuSelf.heartBeat*60/((int64_t)(timeNow-hakuSelf.wakeTime))+1, (int64_t)(timeNow-hakuSelf.wakeTime)/60, (int64_t)(timeNow-hakuSelf.wakeTime)%60);
 			return replyMsg;
@@ -478,6 +490,14 @@ char* parse_plugin_command(event_t *newEvent)
 	if ((newEvent->eventMessage)[0] != hakuSelf.index) {
 		free(command);
 		return NULL;
+	}
+
+	for (i = 0; i < blockNum; i++) {
+		if (blockId == newEvent->userId) {
+			respstr = (char*)malloc(sizeof(char) * 64);
+			snprintf(respstr, 63, "無視。");
+			return respstr;
+		}
 	}
 
 	for (i = 1; i < MAX_SOFILE_NAME_LEN - 2 && (newEvent->eventMessage)[i] && \
