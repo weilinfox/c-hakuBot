@@ -493,7 +493,7 @@ char* parse_plugin_command(event_t *newEvent)
 	}
 
 	for (i = 0; i < blockNum; i++) {
-		if (blockId == newEvent->userId) {
+		if (blockId[i] == newEvent->userId) {
 			respstr = (char*)malloc(sizeof(char) * 64);
 			snprintf(respstr, 63, "無視。");
 			return respstr;
