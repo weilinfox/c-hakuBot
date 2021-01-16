@@ -10,7 +10,8 @@ sleepCode = 109
 quitCode = 0
 sleepDuration = 3600 * 6
 
-rootPath = os.getcwd() + '/' + os.path.dirname(__file__)
+#rootPath = os.getcwd() + '/' + os.path.dirname(__file__)
+rootPath = os.path.dirname(os.path.realpath(__file__))
 cqhttpAddr = '127.0.0.1'
 cqhttpPort = 0
 cqhttpSendPort = 0
