@@ -21,8 +21,8 @@ int data_preload(void)
 {
 	FILE *configFile = NULL;
 	char *configData;
-	int i = 0;
-	char *tmpC, ch;
+	int i = 0, ch;
+	char *tmpC;
 
 	printf("Reading data from %s\n", CONFIG_FILE);
 
